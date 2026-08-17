@@ -1,0 +1,194 @@
+version: "1.0"
+
+# Configurações Globais
+settings:
+  timezone: "America/Sao_Paulo"
+  output_dir: "briefings"
+  database_path: "data/maclovin.db"
+  log_level: "INFO"
+  web_port: 8000
+
+# Configuração do Provedor de Inteligência Artificial (LLM)
+ai:
+  provider: "gemini"                # gemini, nvidia, openai, ollama
+  model: "gemini-2.5-flash"         # Modelo padrão
+  temperature: 0.1                  # Baixa temperatura para estrita fidelidade factual
+  timeout_seconds: 30
+
+# Tópicos de Interesse do Usuário
+topics:
+  - id: "ai-tools"
+    name: "🛠️ Ferramentas & Lançamentos (Grátis & Pagos)"
+    keywords:
+      - "Tool"
+      - "Ferramenta"
+      - "App"
+      - "Software"
+      - "Open Source"
+      - "GitHub"
+      - "Release"
+      - "Launch"
+      - "Pricing"
+      - "Free"
+      - "Grátis"
+      - "Freemium"
+      - "Paid"
+      - "Library"
+      - "Framework"
+      - "SaaS"
+      - "Extension"
+      - "Model"
+    active: true
+    priority: 1
+
+  - id: "ai-ml"
+    name: "📰 Inteligência Artificial & Notícias do Setor"
+    keywords:
+      - "Inteligência Artificial"
+      - "Artificial Intelligence"
+      - "AI"
+      - "LLM"
+      - "Machine Learning"
+      - "OpenAI"
+      - "DeepSeek"
+      - "Anthropic"
+      - "Google Gemini"
+      - "ChatGPT"
+      - "Claude"
+    active: true
+    priority: 1
+
+  - id: "tech-learning"
+    name: "📚 Aprender Tecnologia & Deep Dives"
+    keywords:
+      - "Tutorial"
+      - "Guide"
+      - "Architecture"
+      - "Arquitetura"
+      - "Deep Dive"
+      - "Paper"
+      - "How to"
+      - "Como funciona"
+      - "Engenharia"
+      - "Engineering"
+      - "Benchmark"
+      - "Database"
+      - "System Design"
+    active: true
+    priority: 1
+
+  - id: "geek-culture"
+    name: "🎮 Universo Geek, HQs, Lançamentos, Obras & Pop"
+    keywords:
+      - "HQ"
+      - "Quadrinho"
+      - "Comic"
+      - "Mangá"
+      - "Manga"
+      - "Anime"
+      - "Filme"
+      - "Movie"
+      - "Série"
+      - "Series"
+      - "Trailer"
+      - "Lançamento"
+      - "Obra"
+      - "Livro"
+      - "Book"
+      - "Sci-Fi"
+      - "Ficção Científica"
+      - "Marvel"
+      - "DC"
+      - "Batman"
+      - "Game"
+      - "Jogo"
+      - "PlayStation"
+      - "Xbox"
+      - "Nintendo"
+      - "Steam"
+      - "Hardware"
+      - "GPU"
+      - "Nvidia"
+      - "Ciência"
+      - "Science"
+      - "Espaço"
+    active: true
+    priority: 1
+
+# Fontes de Ingestão por Categoria
+sources:
+  # 1. Ferramentas & Lançamentos
+  - id: "huggingface-blog"
+    name: "Hugging Face Blog & Models"
+    ingestion_type: "rss"
+    url: "https://huggingface.co/blog/feed.xml"
+    category: "tools"
+    active: true
+    timeout_seconds: 15
+
+  - id: "simon-willison-ai"
+    name: "Simon Willison AI & Tools"
+    ingestion_type: "rss"
+    url: "https://simonwillison.net/atom/everything/"
+    category: "tools"
+    active: true
+    timeout_seconds: 15
+
+  # 2. Notícias & Mercado de IA
+  - id: "techcrunch-ai"
+    name: "TechCrunch AI"
+    ingestion_type: "rss"
+    url: "https://techcrunch.com/category/artificial-intelligence/feed/"
+    category: "news"
+    active: true
+    timeout_seconds: 15
+
+  - id: "theverge-ai"
+    name: "The Verge AI"
+    ingestion_type: "rss"
+    url: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml"
+    category: "news"
+    active: true
+    timeout_seconds: 15
+
+  # 3. Aprender Tecnologia & Engenharia
+  - id: "the-new-stack"
+    name: "The New Stack"
+    ingestion_type: "rss"
+    url: "https://thenewstack.io/feed/"
+    category: "learning"
+    active: true
+    timeout_seconds: 15
+
+  # 4. Universo Geek, HQs, Lançamentos, Cinema & Games (Fontes Nacionais e Internacionais)
+  - id: "ovicio-geek"
+    name: "O Vício (HQs, Cinema, Séries & Animes)"
+    ingestion_type: "rss"
+    url: "https://ovicio.com.br/feed/"
+    category: "geek"
+    active: true
+    timeout_seconds: 15
+
+  - id: "legiao-dos-herois"
+    name: "Legião dos Heróis (HQs, Filmes & Cultura Pop)"
+    ingestion_type: "rss"
+    url: "https://www.legiaodosherois.com.br/feed"
+    category: "geek"
+    active: true
+    timeout_seconds: 15
+
+  - id: "ign-brasil"
+    name: "IGN Brasil (Games, Tech & Cinema)"
+    ingestion_type: "rss"
+    url: "https://br.ign.com/feed.xml"
+    category: "geek"
+    active: true
+    timeout_seconds: 15
+
+  - id: "tomshardware"
+    name: "Tom's Hardware"
+    ingestion_type: "rss"
+    url: "https://www.tomshardware.com/feeds/all"
+    category: "geek"
+    active: true
+    timeout_seconds: 15

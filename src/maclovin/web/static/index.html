@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maclovin — Daily Intelligence Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand-container">
+        <div class="brand-logo">🕶️</div>
+        <div>
+          <h1 class="brand-title">Maclovin Intelligence</h1>
+          <p class="brand-subtitle">Radar de Ferramentas, Notícias de IA & Universo Geek</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="date-picker-wrapper">
+          <label for="dateSelect" class="date-label">📅 Data:</label>
+          <select id="dateSelect" class="date-select"></select>
+        </div>
+        <button id="btnSync" class="btn-sync" title="Disparar nova coleta e resumo agora">
+          <span class="sync-icon">⚡</span> Sincronizar Agora
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="category-nav">
+      <button class="nav-tab active" data-tab="tools">
+        <span class="tab-icon">🛠️</span>
+        <span class="tab-title">Radar de Ferramentas</span>
+        <span class="tab-badge" id="badgeTools">0</span>
+      </button>
+      <button class="nav-tab" data-tab="news">
+        <span class="tab-icon">📰</span>
+        <span class="tab-title">Notícias & Mercado de IA</span>
+        <span class="tab-badge" id="badgeNews">0</span>
+      </button>
+      <button class="nav-tab" data-tab="learning">
+        <span class="tab-icon">📚</span>
+        <span class="tab-title">Aprender Tecnologia</span>
+        <span class="tab-badge" id="badgeLearning">0</span>
+      </button>
+      <button class="nav-tab" data-tab="geek">
+        <span class="tab-icon">🎮</span>
+        <span class="tab-title">Universo Geek & Nerd</span>
+        <span class="tab-badge" id="badgeGeek">0</span>
+      </button>
+    </nav>
+
+    <!-- Filter & Search Toolbar -->
+    <div class="toolbar">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Buscar por palavra-chave, ferramenta, tema...">
+      </div>
+
+      <div class="pricing-filters" id="pricingFilters">
+        <button class="filter-chip active" data-pricing="all">Todos os Preços</button>
+        <button class="filter-chip" data-pricing="free">🟢 Grátis / Open-Source</button>
+        <button class="filter-chip" data-pricing="freemium">🟡 Freemium</button>
+        <button class="filter-chip" data-pricing="paid">🔵 Pago / Comercial</button>
+      </div>
+    </div>
+
+    <!-- Main Content Container -->
+    <main class="content-area">
+      <!-- Loading State -->
+      <div id="loadingState" class="state-container hidden">
+        <div class="spinner"></div>
+        <p>Carregando inteligência diária...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="state-container hidden">
+        <div class="empty-icon">📭</div>
+        <h3>Nenhum item encontrado nesta categoria</h3>
+        <p>Tente ajustar os filtros ou clique em "Sincronizar Agora" para executar a coleta.</p>
+      </div>
+
+      <!-- Cards Grid -->
+      <div id="cardsGrid" class="cards-grid"></div>
+    </main>
+
+    <!-- Footer Stats -->
+    <footer class="app-footer">
+      <div class="footer-stats" id="footerStats">
+        <span>Carregando estatísticas...</span>
+      </div>
+      <div class="footer-credits">
+        Maclovin Intelligence Platform &bull; 100% Local & Privado
+      </div>
+    </footer>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
