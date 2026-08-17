@@ -1,6 +1,3 @@
-"""Vercel Serverless Function for /api/briefing."""
-
-import http.server
 import json
 import urllib.parse
 import pathlib
@@ -107,44 +104,46 @@ def extract_briefing_from_markdown(file_path: pathlib.Path) -> dict:
     }
 
 
-class handler(http.server.BaseHTTPRequestHandler):
-    def do_GET(self):
-        parsed = urllib.parse.urlparse(self.path)
-        query = urllib.parse.parse_qs(parsed.query)
-        target_date_str = query.get("date", [None])[0]
+def app(environ, start_response):
+    query_str = environ.get("QUERY_STRING", "")
+    params = urllib.parse.parse_qs(query_str)
+    target_date_str = params.get("date", [None])[0]
 
-        briefings_dir = pathlib.Path("briefings")
-        selected_file = None
+    briefings_dir = pathlib.Path("briefings")
+    selected_file = None
 
-        if briefings_dir.exists():
-            files = sorted(list(briefings_dir.glob("*.md")), reverse=True)
-            if target_date_str:
-                for f in files:
-                    if f.stem == target_date_str:
-                        selected_file = f
-                        break
-            elif files:
-                selected_file = files[0]
+    if briefings_dir.exists():
+        files = sorted(list(briefings_dir.glob("*.md")), reverse=True)
+        if target_date_str:
+            for f in files:
+                if f.stem == target_date_str:
+                    selected_file = f
+                    break
+        elif files:
+            selected_file = files[0]
 
-        if selected_file and selected_file.exists():
-            payload = extract_briefing_from_markdown(selected_file)
+    if selected_file and selected_file.exists():
+        payload = extract_briefing_from_markdown(selected_file)
+    else:
+        json_file = pathlib.Path("public/data/briefing.json")
+        if json_file.exists():
+            payload = json.loads(json_file.read_text(encoding="utf-8"))
         else:
-            # Fallback para data estática pré-renderizada
-            json_file = pathlib.Path("public/data/briefing.json")
-            if json_file.exists():
-                payload = json.loads(json_file.read_text(encoding="utf-8"))
-            else:
-                payload = {
-                    "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-                    "total_items": 0,
-                    "tools": [],
-                    "learning": [],
-                    "geek": [],
-                    "news": [],
-                }
+            payload = {
+                "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+                "total_items": 0,
+                "tools": [],
+                "learning": [],
+                "geek": [],
+                "news": [],
+            }
 
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.end_headers()
-        self.wfile.write(json.dumps(payload, ensure_ascii=False).encode("utf-8"))
+    body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    status = "200 OK"
+    headers = [
+        ("Content-Type", "application/json; charset=utf-8"),
+        ("Access-Control-Allow-Origin", "*"),
+        ("Content-Length", str(len(body))),
+    ]
+    start_response(status, headers)
+    return [body]
