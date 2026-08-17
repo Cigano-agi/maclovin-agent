@@ -95,7 +95,10 @@ function setupEventListeners() {
 
 async function loadHistoryDates() {
   try {
-    const res = await fetch('/api/history');
+    let res = await fetch('/api/history');
+    if (!res.ok) {
+      res = await fetch('/data/history.json');
+    }
     const data = await res.json();
     dateSelect.innerHTML = '';
     
@@ -123,8 +126,11 @@ async function fetchBriefing(date = '') {
   emptyState.classList.add('hidden');
 
   try {
-    const url = date ? `/api/briefing?date=${date}` : '/api/briefing';
-    const res = await fetch(url);
+    let url = date ? `/api/briefing?date=${date}` : '/api/briefing';
+    let res = await fetch(url);
+    if (!res.ok) {
+      res = await fetch('/data/briefing.json');
+    }
     const data = await res.json();
 
     currentData.tools = data.tools || [];
