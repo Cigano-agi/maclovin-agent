@@ -42,7 +42,7 @@ topics:
     priority: 1
 
   - id: "ai-ml"
-    name: "📰 Inteligência Artificial & Notícias do Setor"
+    name: "📰 Notícias de IA, Startups & Mercado"
     keywords:
       - "Inteligência Artificial"
       - "Artificial Intelligence"
@@ -55,6 +55,9 @@ topics:
       - "Google Gemini"
       - "ChatGPT"
       - "Claude"
+      - "Meta"
+      - "Nvidia"
+      - "Startup"
     active: true
     priority: 1
 
@@ -63,6 +66,7 @@ topics:
     keywords:
       - "Tutorial"
       - "Guide"
+      - "Guia"
       - "Architecture"
       - "Arquitetura"
       - "Deep Dive"
@@ -74,6 +78,11 @@ topics:
       - "Benchmark"
       - "Database"
       - "System Design"
+      - "Python"
+      - "JavaScript"
+      - "Rust"
+      - "Golang"
+      - "Code"
     active: true
     priority: 1
 
@@ -108,7 +117,6 @@ topics:
       - "Steam"
       - "Hardware"
       - "GPU"
-      - "Nvidia"
       - "Ciência"
       - "Science"
       - "Espaço"
@@ -117,7 +125,7 @@ topics:
 
 # Fontes de Ingestão por Categoria
 sources:
-  # 1. Ferramentas & Lançamentos
+  # 1. Ferramentas, Modelos & Repositórios
   - id: "huggingface-blog"
     name: "Hugging Face Blog & Models"
     ingestion_type: "rss"
@@ -134,7 +142,7 @@ sources:
     active: true
     timeout_seconds: 15
 
-  # 2. Notícias & Mercado de IA
+  # 2. Notícias de IA e Grandes Fatos
   - id: "techcrunch-ai"
     name: "TechCrunch AI"
     ingestion_type: "rss"
@@ -151,16 +159,32 @@ sources:
     active: true
     timeout_seconds: 15
 
-  # 3. Aprender Tecnologia & Engenharia
+  # 3. Aprender Tecnologia, Tutoriais & Deep Dives
+  - id: "dev-to-ai"
+    name: "Dev.to (Tutoriais de IA & Engenharia)"
+    ingestion_type: "rss"
+    url: "https://dev.to/feed/tag/ai"
+    category: "learning"
+    active: true
+    timeout_seconds: 15
+
   - id: "the-new-stack"
-    name: "The New Stack"
+    name: "The New Stack (Arquitetura & Engenharia)"
     ingestion_type: "rss"
     url: "https://thenewstack.io/feed/"
     category: "learning"
     active: true
     timeout_seconds: 15
 
-  # 4. Universo Geek, HQs, Lançamentos, Cinema & Games (Fontes Nacionais e Internacionais)
+  - id: "freecodecamp"
+    name: "FreeCodeCamp News & Guides"
+    ingestion_type: "rss"
+    url: "https://www.freecodecamp.org/news/rss/"
+    category: "learning"
+    active: true
+    timeout_seconds: 15
+
+  # 4. Universo Geek, HQs, Lançamentos, Cinema & Games
   - id: "ovicio-geek"
     name: "O Vício (HQs, Cinema, Séries & Animes)"
     ingestion_type: "rss"

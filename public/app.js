@@ -1,4 +1,4 @@
-// Frontend Dashboard Application Logic
+// Maclovin Intelligence Dashboard Frontend Application
 
 let currentData = {
   tools: [],
@@ -81,16 +81,48 @@ function setupEventListeners() {
     try {
       const res = await fetch('/api/run', { method: 'POST' });
       if (res.ok) {
-        await loadHistoryDates();
+        const payload = await res.json();
+        if (payload.tools || payload.news || payload.learning || payload.geek) {
+          applyData(payload);
+        } else {
+          await loadHistoryDates();
+          await fetchBriefing();
+        }
+      } else {
+        // Fallback local ou estático
         await fetchBriefing();
       }
     } catch (err) {
-      console.error('Falha na sincronização:', err);
+      console.warn('Sincronização API, tentando recarregar dados:', err);
+      await fetchBriefing();
     } finally {
       btnSync.disabled = false;
       btnSync.innerHTML = `<span class="sync-icon">⚡</span> Sincronizar Agora`;
     }
   });
+}
+
+function applyData(data) {
+  currentData.tools = data.tools || [];
+  currentData.news = data.news || [];
+  currentData.learning = data.learning || [];
+  currentData.geek = data.geek || [];
+
+  // Atualizar badges dos contadores
+  badgeTools.textContent = currentData.tools.length;
+  badgeNews.textContent = currentData.news.length;
+  badgeLearning.textContent = currentData.learning.length;
+  badgeGeek.textContent = currentData.geek.length;
+
+  // Atualizar footer
+  const stats = data.latest_execution;
+  if (stats) {
+    footerStats.innerHTML = `📅 <strong>Data:</strong> ${data.date} &bull; 📊 <strong>Total de Itens:</strong> ${data.total_items} &bull; ⚡ <strong>Status:</strong> <span style="color:#10B981">${stats.status}</span>`;
+  } else {
+    footerStats.innerHTML = `📅 <strong>Data:</strong> ${data.date} &bull; 📊 <strong>Total de Itens:</strong> ${data.total_items}`;
+  }
+
+  renderCards();
 }
 
 async function loadHistoryDates() {
@@ -132,27 +164,7 @@ async function fetchBriefing(date = '') {
       res = await fetch('/data/briefing.json');
     }
     const data = await res.json();
-
-    currentData.tools = data.tools || [];
-    currentData.news = data.news || [];
-    currentData.learning = data.learning || [];
-    currentData.geek = data.geek || [];
-
-    // Atualizar badges
-    badgeTools.textContent = currentData.tools.length;
-    badgeNews.textContent = currentData.news.length;
-    badgeLearning.textContent = currentData.learning.length;
-    badgeGeek.textContent = currentData.geek.length;
-
-    // Atualizar footer
-    const stats = data.latest_execution;
-    if (stats) {
-      footerStats.innerHTML = `📅 <strong>Data:</strong> ${data.date} &bull; 📊 <strong>Total de Itens:</strong> ${data.total_items} &bull; ⚡ <strong>Status:</strong> <span style="color:#10B981">${stats.status}</span>`;
-    } else {
-      footerStats.innerHTML = `📅 <strong>Data:</strong> ${data.date} &bull; 📊 <strong>Total de Itens:</strong> ${data.total_items}`;
-    }
-
-    renderCards();
+    applyData(data);
   } catch (err) {
     console.error('Erro ao buscar dados:', err);
   } finally {
@@ -214,13 +226,20 @@ function renderCards() {
       `;
     }
 
-    const pubDate = new Date(item.published_date_utc);
-    const timeFormatted = pubDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    let timeFormatted = '12:00';
+    if (item.published_date_utc) {
+      try {
+        const pubDate = new Date(item.published_date_utc);
+        timeFormatted = pubDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      } catch (e) {
+        timeFormatted = '12:00';
+      }
+    }
 
     card.innerHTML = `
       <div>
         <div class="card-header">
-          <span class="card-source">${item.source_id}</span>
+          <span class="card-source">${item.source_id || 'Fonte'}</span>
           ${pricingBadge}
         </div>
         <h3 class="card-title">${item.title}</h3>
@@ -229,7 +248,7 @@ function renderCards() {
         ${featuresHtml}
       </div>
       <div class="card-footer">
-        <a href="${item.canonical_url}" target="_blank" rel="noopener noreferrer" class="card-link">
+        <a href="${item.canonical_url || '#'}" target="_blank" rel="noopener noreferrer" class="card-link">
           Acessar link original ↗
         </a>
         <span class="card-time">${timeFormatted} UTC</span>
