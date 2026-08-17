@@ -3,6 +3,7 @@ import urllib.parse
 import pathlib
 import re
 from datetime import datetime, timezone
+from maclovin.intelligence.translator import translate_to_pt_br
 
 
 def extract_briefing_from_markdown(file_path: pathlib.Path) -> dict:
@@ -65,17 +66,21 @@ def extract_briefing_from_markdown(file_path: pathlib.Path) -> dict:
                         url = url_match.group(2)
                 j += 1
 
+            translated_title = translate_to_pt_br(title)
+            translated_summary = translate_to_pt_br(summary or title)
+            translated_why = translate_to_pt_br(why) if why else "Acompanhamento relevante para inovação e desenvolvimento."
+
             item = {
                 "id": f"{current_section}-{len(tools)+len(news)+len(learning)+len(geek)+1}",
                 "source_id": source_id,
-                "title": title,
+                "title": translated_title,
                 "canonical_url": url,
                 "published_date_utc": f"{ref_date}T12:00:00Z",
-                "summary": summary or title,
-                "why_it_matters": why,
+                "summary": translated_summary,
+                "why_it_matters": translated_why,
                 "pricing_model": pricing,
                 "item_type": "tool" if current_section == "tools" else ("learning" if current_section == "learning" else ("geek" if current_section == "geek" else "news")),
-                "key_features": features,
+                "key_features": [translate_to_pt_br(f) for f in features],
             }
 
             if current_section == "tools":
