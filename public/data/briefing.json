@@ -107,6 +107,21 @@
       "key_features": []
     }
   ],
+  "business": [
+    {
+      "id": "business-11",
+      "source_id": "feed",
+      "title": "A receita anualizada da Anthropic sobe para US$ 65 bilhões",
+      "canonical_url": "#",
+      "published_date_utc": "2026-08-17T12:00:00Z",
+      "summary": "A receita anualizada da Anthropic sobe para US$ 65 bilhões",
+      "why_it_matters": "Acompanhamento relevante para inovação e desenvolvimento.",
+      "pricing_model": "Não especificado",
+      "item_type": "business",
+      "tool_subtype": "app",
+      "key_features": []
+    }
+  ],
   "learning": [],
   "geek": [],
   "news": [
@@ -130,19 +145,6 @@
       "canonical_url": "https://thenewstack.io/agent-plugins-portability-gaps/",
       "published_date_utc": "2026-08-17T12:00:00Z",
       "summary": "A Anthropic definiu os padrões dentro dos Agent Plugins. Então, por que isso não está ajudando a governar o formato?",
-      "why_it_matters": "Acompanhamento relevante para inovação e desenvolvimento.",
-      "pricing_model": "Não especificado",
-      "item_type": "news",
-      "tool_subtype": "app",
-      "key_features": []
-    },
-    {
-      "id": "news-11",
-      "source_id": "feed",
-      "title": "A receita anualizada da Anthropic sobe para US$ 65 bilhões",
-      "canonical_url": "#",
-      "published_date_utc": "2026-08-17T12:00:00Z",
-      "summary": "A receita anualizada da Anthropic sobe para US$ 65 bilhões",
       "why_it_matters": "Acompanhamento relevante para inovação e desenvolvimento.",
       "pricing_model": "Não especificado",
       "item_type": "news",

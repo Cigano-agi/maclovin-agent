@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field, model_validator
 import hashlib
 
 PricingModel = Literal["Grátis / Open-Source", "Freemium", "Pago", "Não especificado"]
-ItemType = Literal["news", "tool", "learning", "geek"]
+ItemType = Literal["news", "tool", "learning", "geek", "business"]
 
 
 class TopicConfig(BaseModel):
@@ -24,7 +24,7 @@ class SourceConfig(BaseModel):
     url: str
     active: bool = True
     timeout_seconds: int = Field(default=10, ge=1, le=60)
-    category: str = "news"  # "news", "tools", "learning", "geek"
+    category: str = "news"  # "news", "tools", "learning", "geek", "business"
 
 
 class SettingsConfig(BaseModel):
@@ -63,7 +63,7 @@ class NewsItem(BaseModel):
     content_hash: str = ""
     topic_ids: List[str] = Field(default_factory=list)
     relevance_score: float = 0.0
-    item_type: str = "news"  # "news", "tool", "learning", "geek"
+    item_type: str = "news"  # "news", "tool", "learning", "geek", "business"
     tool_subtype: str = "app"  # "repo" (repositório GitHub/open-source) ou "app" (software/SaaS)
     pricing_model: str = "Não especificado"  # "Grátis / Open-Source", "Freemium", "Pago", "Não especificado"
     key_features: List[str] = Field(default_factory=list)
@@ -98,6 +98,7 @@ class BriefingReport(BaseModel):
     generated_at_utc: datetime = Field(default_factory=datetime.utcnow)
     events: List[EventCluster] = Field(default_factory=list)
     tools_and_launches: List[NewsItem] = Field(default_factory=list)
+    business_items: List[NewsItem] = Field(default_factory=list)
     learning_items: List[NewsItem] = Field(default_factory=list)
     geek_items: List[NewsItem] = Field(default_factory=list)
     standalone_news: List[NewsItem] = Field(default_factory=list)

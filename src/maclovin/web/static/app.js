@@ -1,8 +1,9 @@
-// MACLOVIN NEWS — Editorial Frontend Logic, Subtypes (Repos/Apps) & History Navigation
+// MACLOVIN NEWS — Editorial Frontend Logic, Subtypes (Repos/Apps), Business & History
 
 let cachedBriefings = {};
 let currentData = {
   tools: [],
+  business: [],
   news: [],
   learning: [],
   geek: [],
@@ -27,6 +28,7 @@ const footerStats = document.getElementById('footerStats');
 const currentDateDisplay = document.getElementById('currentDateDisplay');
 
 const badgeTools = document.getElementById('badgeTools');
+const badgeBusiness = document.getElementById('badgeBusiness');
 const badgeNews = document.getElementById('badgeNews');
 const badgeLearning = document.getElementById('badgeLearning');
 const badgeGeek = document.getElementById('badgeGeek');
@@ -47,6 +49,14 @@ const LEARNING_KW = [
   'system design', 'engenharia de software', 'aprenda', 'curso'
 ];
 
+const BUSINESS_KW = [
+  'funding', 'valuation', 'venture capital', 'vc', 'round', 'rodada', 'investimento', 'investors', 'investidores',
+  'm&a', 'acquisition', 'acquire', 'adquire', 'aquisição', 'comprar', 'comprou', 'startup', 'startups',
+  'ipo', 'lucro', 'receita', 'faturamento', 'revenue', 'quarter', 'trimestre', 'ações', 'shares', 'stock',
+  'wall street', 'demissão', 'demissões', 'layoff', 'layoffs', 'aporte', 'aportou', 'série a', 'série b',
+  'seed', 'pre-seed', 'unicórnio', 'unicorn', 'fintech', 'market cap', 'captação', 'fundraise'
+];
+
 const TOOL_KW = [
   'tool', 'ferramenta', 'software', 'open-source', 'open source', 'código aberto', 'github', 'repositório',
   'repository', 'library', 'biblioteca', 'framework', 'saas', 'extension', 'extensão', 'plugin', 'sdk', 'api',
@@ -65,13 +75,19 @@ function classifyItemStrict(item) {
   for (const kw of LEARNING_KW) {
     if (text.includes(kw)) return 'learning';
   }
+
+  // 3. Business, Startups & Investimentos
+  for (const kw of BUSINESS_KW) {
+    if (text.includes(kw)) return 'business';
+  }
   
-  // 3. Ferramentas reais
+  // 4. Ferramentas reais
   for (const kw of TOOL_KW) {
     if (text.includes(kw)) return 'tools';
   }
   
   if (item.item_type === 'tool' && !GEEK_KW.some(k => text.includes(k))) return 'tools';
+  if (item.item_type === 'business') return 'business';
   if (item.item_type === 'learning') return 'learning';
   if (item.item_type === 'geek') return 'geek';
 
@@ -173,7 +189,7 @@ function setupEventListeners() {
       const res = await fetch('/api/run', { method: 'POST' });
       if (res.ok) {
         const payload = await res.json();
-        if (payload.tools || payload.news || payload.learning || payload.geek) {
+        if (payload.tools || payload.business || payload.news || payload.learning || payload.geek) {
           applyData(payload);
         } else {
           await loadHistoryDates();
@@ -195,12 +211,14 @@ function setupEventListeners() {
 function applyData(data) {
   const allItems = [
     ...(data.tools || []),
+    ...(data.business || []),
     ...(data.news || []),
     ...(data.learning || []),
     ...(data.geek || []),
   ];
 
   const tools = [];
+  const business = [];
   const news = [];
   const learning = [];
   const geek = [];
@@ -211,21 +229,24 @@ function applyData(data) {
     it.tool_subtype = detectToolSubtype(it);
     
     if (cat === 'tools') tools.push(it);
+    else if (cat === 'business') business.push(it);
     else if (cat === 'learning') learning.push(it);
     else if (cat === 'geek') geek.push(it);
     else news.push(it);
   });
 
   currentData.tools = tools;
+  currentData.business = business;
   currentData.news = news;
   currentData.learning = learning;
   currentData.geek = geek;
 
   // Atualizar badges dos contadores
-  badgeTools.textContent = currentData.tools.length;
-  badgeNews.textContent = currentData.news.length;
-  badgeLearning.textContent = currentData.learning.length;
-  badgeGeek.textContent = currentData.geek.length;
+  if (badgeTools) badgeTools.textContent = currentData.tools.length;
+  if (badgeBusiness) badgeBusiness.textContent = currentData.business.length;
+  if (badgeNews) badgeNews.textContent = currentData.news.length;
+  if (badgeLearning) badgeLearning.textContent = currentData.learning.length;
+  if (badgeGeek) badgeGeek.textContent = currentData.geek.length;
 
   // Formatar data de exibição da edição
   if (data.date) {
@@ -294,7 +315,6 @@ async function fetchBriefing(date = '') {
     let url = date ? `/api/briefing?date=${date}` : '/api/briefing';
     let res = await fetch(url);
     if (!res.ok) {
-      // Fallback estático para dia específico
       const dateUrl = date ? `/data/briefings/${date}.json` : '/data/briefing.json';
       res = await fetch(dateUrl);
       if (!res.ok) {
@@ -378,7 +398,7 @@ function renderCards() {
     
     const takeawayBox = item.why_it_matters ? `
       <div class="card-takeaway">
-        <strong>Contexto & Impacto:</strong> ${item.why_it_matters}
+        <strong>${activeTab === 'business' ? 'Análise de Mercado:' : 'Contexto & Impacto:'}</strong> ${item.why_it_matters}
       </div>
     ` : '';
 
@@ -417,7 +437,7 @@ function renderCards() {
       </div>
       <div class="card-action-bar">
         <a href="${item.canonical_url || '#'}" target="_blank" rel="noopener noreferrer" class="read-btn">
-          ${item.tool_subtype === 'repo' ? 'Ver no GitHub ↗' : 'Acessar ferramenta ↗'}
+          ${item.tool_subtype === 'repo' && activeTab === 'tools' ? 'Ver no GitHub ↗' : 'Ler matéria completa ↗'}
         </a>
         <span class="card-pubtime">${timeFormatted} UTC</span>
       </div>

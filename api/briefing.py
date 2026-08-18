@@ -12,6 +12,7 @@ def extract_briefing_from_markdown(file_path: pathlib.Path) -> dict:
     ref_date = file_path.stem
 
     tools = []
+    business = []
     news = []
     learning = []
     geek = []
@@ -24,6 +25,8 @@ def extract_briefing_from_markdown(file_path: pathlib.Path) -> dict:
         line = lines[i].strip()
         if "## 🛠️ Radar de Ferramentas" in line:
             current_section = "tools"
+        elif "## 💼 Business" in line:
+            current_section = "business"
         elif "## 📚 Aprender Tecnologia" in line:
             current_section = "learning"
         elif "## 🎮 Universo Geek" in line:
@@ -75,7 +78,7 @@ def extract_briefing_from_markdown(file_path: pathlib.Path) -> dict:
             subtype = classify_tool_subtype(translated_title, translated_summary, url) if real_cat == "tools" else "app"
 
             item = {
-                "id": f"{real_cat}-{len(tools)+len(news)+len(learning)+len(geek)+1}",
+                "id": f"{real_cat}-{len(tools)+len(business)+len(news)+len(learning)+len(geek)+1}",
                 "source_id": source_id,
                 "title": translated_title,
                 "canonical_url": url,
@@ -90,6 +93,8 @@ def extract_briefing_from_markdown(file_path: pathlib.Path) -> dict:
 
             if real_cat == "tools":
                 tools.append(item)
+            elif real_cat == "business":
+                business.append(item)
             elif real_cat == "learning":
                 learning.append(item)
             elif real_cat == "geek":
@@ -101,15 +106,16 @@ def extract_briefing_from_markdown(file_path: pathlib.Path) -> dict:
 
     return {
         "date": ref_date,
-        "total_items": len(tools) + len(news) + len(learning) + len(geek),
+        "total_items": len(tools) + len(business) + len(news) + len(learning) + len(geek),
         "tools": tools,
+        "business": business,
         "learning": learning,
         "geek": geek,
         "news": news,
         "latest_execution": {
             "reference_date": ref_date,
             "status": "SUCCESS",
-            "items_collected_count": len(tools) + len(news) + len(learning) + len(geek),
+            "items_collected_count": len(tools) + len(business) + len(news) + len(learning) + len(geek),
         },
     }
 
@@ -158,6 +164,7 @@ def app(environ, start_response):
                 "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
                 "total_items": 0,
                 "tools": [],
+                "business": [],
                 "learning": [],
                 "geek": [],
                 "news": [],
