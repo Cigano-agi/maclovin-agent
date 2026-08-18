@@ -4,6 +4,7 @@ from maclovin.config import load_config
 from maclovin.core.pipeline import Pipeline
 from maclovin.intelligence.factory import create_llm_provider
 from maclovin.ingestion.category_classifier import classify_category
+from maclovin.storage.supabase_client import save_briefing_to_supabase, save_news_items_to_supabase
 
 
 def app(environ, start_response):
@@ -75,6 +76,13 @@ def app(environ, start_response):
                 "items_collected_count": len(final_tools) + len(final_opportunities) + len(final_business) + len(final_news) + len(final_learning) + len(final_geek),
             },
         }
+
+        # Salvar no banco de dados permanente Supabase PostgreSQL
+        try:
+            save_briefing_to_supabase(payload)
+            save_news_items_to_supabase(final_tools + final_opportunities + final_business + final_news + final_learning + final_geek, report.reference_date.isoformat())
+        except Exception as err:
+            print(f"[Supabase] Aviso: Falha ao salvar no banco: {err}")
 
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         status = "200 OK"

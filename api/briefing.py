@@ -5,6 +5,7 @@ import re
 from datetime import datetime, timezone
 from maclovin.intelligence.translator import translate_to_pt_br
 from maclovin.ingestion.category_classifier import classify_category, classify_tool_subtype
+from maclovin.storage.supabase_client import get_briefing_from_supabase, save_briefing_to_supabase
 
 
 def extract_briefing_from_markdown(file_path: pathlib.Path) -> dict:
@@ -131,7 +132,25 @@ def app(environ, start_response):
     params = urllib.parse.parse_qs(query_str)
     target_date_str = params.get("date", [None])[0]
 
-    # 1. Tentar ler do JSON específico do dia em public/data/briefings/{date}.json
+    # 1. Tentar buscar direto do banco de dados permanente Supabase
+    supabase_data = None
+    try:
+        supabase_data = get_briefing_from_supabase(target_date_str)
+    except Exception as e:
+        print(f"[API] Erro ao consultar Supabase: {e}")
+
+    if supabase_data:
+        body = json.dumps(supabase_data, ensure_ascii=False).encode("utf-8")
+        status = "200 OK"
+        headers = [
+            ("Content-Type", "application/json; charset=utf-8"),
+            ("Access-Control-Allow-Origin", "*"),
+            ("Content-Length", str(len(body))),
+        ]
+        start_response(status, headers)
+        return [body]
+
+    # 2. Fallback estático em JSON
     if target_date_str:
         specific_json = pathlib.Path(f"public/data/briefings/{target_date_str}.json")
         if specific_json.exists():
@@ -146,6 +165,7 @@ def app(environ, start_response):
             start_response(status, headers)
             return [body]
 
+    # 3. Fallback Markdown
     briefings_dir = pathlib.Path("briefings")
     selected_file = None
 
@@ -161,6 +181,11 @@ def app(environ, start_response):
 
     if selected_file and selected_file.exists():
         payload = extract_briefing_from_markdown(selected_file)
+        # Salvar no Supabase para as próximas requisições
+        try:
+            save_briefing_to_supabase(payload)
+        except Exception:
+            pass
     else:
         json_file = pathlib.Path("public/data/briefing.json")
         if json_file.exists():
