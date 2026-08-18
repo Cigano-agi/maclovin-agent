@@ -1,0 +1,27 @@
+{
+  "date": "2026-08-16",
+  "total_items": 1,
+  "tools": [],
+  "learning": [],
+  "geek": [],
+  "news": [
+    {
+      "id": "news-1",
+      "source_id": "feed",
+      "title": "Avanço da OpenAI em agentes de IA",
+      "canonical_url": "#",
+      "published_date_utc": "2026-08-16T12:00:00Z",
+      "summary": "Fato consolidado a partir de 1 matérias analisadas.",
+      "why_it_matters": "Impacto relevante nos ecossistemas de desenvolvimento e automação.",
+      "pricing_model": "Não especificado",
+      "item_type": "news",
+      "tool_subtype": "app",
+      "key_features": []
+    }
+  ],
+  "latest_execution": {
+    "reference_date": "2026-08-16",
+    "status": "SUCCESS",
+    "items_collected_count": 1
+  }
+}

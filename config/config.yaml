@@ -18,7 +18,7 @@ ai:
 # Tópicos de Interesse do Usuário
 topics:
   - id: "ai-tools"
-    name: "🛠️ Ferramentas & Lançamentos (Grátis & Pagos)"
+    name: "🛠️ Radar de Ferramentas (Repositórios GitHub & Apps)"
     keywords:
       - "Tool"
       - "Ferramenta"
@@ -26,6 +26,8 @@ topics:
       - "Software"
       - "Open Source"
       - "GitHub"
+      - "Repository"
+      - "Repositório"
       - "Release"
       - "Launch"
       - "Pricing"
@@ -42,7 +44,7 @@ topics:
     priority: 1
 
   - id: "ai-ml"
-    name: "📰 Notícias de IA, Startups & Mercado"
+    name: "📰 Notícias & Mercado de IA"
     keywords:
       - "Inteligência Artificial"
       - "Artificial Intelligence"
@@ -105,7 +107,6 @@ topics:
       - "Livro"
       - "Book"
       - "Sci-Fi"
-      - "Ficção Científica"
       - "Marvel"
       - "DC"
       - "Batman"
@@ -117,34 +118,39 @@ topics:
       - "Steam"
       - "Hardware"
       - "GPU"
-      - "Ciência"
-      - "Science"
-      - "Espaço"
     active: true
     priority: 1
 
 # Fontes de Ingestão por Categoria
 sources:
-  # 1. Ferramentas, Modelos & Repositórios
-  - id: "huggingface-blog"
-    name: "Hugging Face Blog & Models"
+  # 1. Ferramentas, Repositórios GitHub & Lançamentos de Apps
+  - id: "show-hn-tools"
+    name: "Show HN (Repositórios & Novos Apps)"
+    ingestion_type: "rss"
+    url: "https://hnrss.org/show"
+    category: "tools"
+    active: true
+    timeout_seconds: 15
+
+  - id: "huggingface-models"
+    name: "Hugging Face (Modelos & Repositórios de IA)"
     ingestion_type: "rss"
     url: "https://huggingface.co/blog/feed.xml"
     category: "tools"
     active: true
     timeout_seconds: 15
 
-  - id: "simon-willison-ai"
-    name: "Simon Willison AI & Tools"
+  - id: "simon-willison-tools"
+    name: "Simon Willison Tools & AI"
     ingestion_type: "rss"
     url: "https://simonwillison.net/atom/everything/"
     category: "tools"
     active: true
     timeout_seconds: 15
 
-  # 2. Notícias de IA e Grandes Fatos
+  # 2. Notícias & Mercado de IA
   - id: "techcrunch-ai"
-    name: "TechCrunch AI"
+    name: "TechCrunch AI & Startups"
     ingestion_type: "rss"
     url: "https://techcrunch.com/category/artificial-intelligence/feed/"
     category: "news"
@@ -152,7 +158,7 @@ sources:
     timeout_seconds: 15
 
   - id: "theverge-ai"
-    name: "The Verge AI"
+    name: "The Verge Tech"
     ingestion_type: "rss"
     url: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml"
     category: "news"
@@ -161,7 +167,7 @@ sources:
 
   # 3. Aprender Tecnologia, Tutoriais & Deep Dives
   - id: "dev-to-ai"
-    name: "Dev.to (Tutoriais de IA & Engenharia)"
+    name: "Dev.to (Tutoriais & Engenharia)"
     ingestion_type: "rss"
     url: "https://dev.to/feed/tag/ai"
     category: "learning"
@@ -169,24 +175,16 @@ sources:
     timeout_seconds: 15
 
   - id: "the-new-stack"
-    name: "The New Stack (Arquitetura & Engenharia)"
+    name: "The New Stack (Arquitetura & Sistemas)"
     ingestion_type: "rss"
     url: "https://thenewstack.io/feed/"
     category: "learning"
     active: true
     timeout_seconds: 15
 
-  - id: "freecodecamp"
-    name: "FreeCodeCamp News & Guides"
-    ingestion_type: "rss"
-    url: "https://www.freecodecamp.org/news/rss/"
-    category: "learning"
-    active: true
-    timeout_seconds: 15
-
-  # 4. Universo Geek, HQs, Lançamentos, Cinema & Games
+  # 4. Universo Geek, Games, Cinema & HQs
   - id: "ovicio-geek"
-    name: "O Vício (HQs, Cinema, Séries & Animes)"
+    name: "O Vício (HQs, Cinema & Animes)"
     ingestion_type: "rss"
     url: "https://ovicio.com.br/feed/"
     category: "geek"
@@ -194,7 +192,7 @@ sources:
     timeout_seconds: 15
 
   - id: "legiao-dos-herois"
-    name: "Legião dos Heróis (HQs, Filmes & Cultura Pop)"
+    name: "Legião dos Heróis (Cultura Pop & HQs)"
     ingestion_type: "rss"
     url: "https://www.legiaodosherois.com.br/feed"
     category: "geek"
@@ -205,14 +203,6 @@ sources:
     name: "IGN Brasil (Games, Tech & Cinema)"
     ingestion_type: "rss"
     url: "https://br.ign.com/feed.xml"
-    category: "geek"
-    active: true
-    timeout_seconds: 15
-
-  - id: "tomshardware"
-    name: "Tom's Hardware"
-    ingestion_type: "rss"
-    url: "https://www.tomshardware.com/feeds/all"
     category: "geek"
     active: true
     timeout_seconds: 15

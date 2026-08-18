@@ -1,6 +1,6 @@
-// MACLOVIN NEWS — Editorial Frontend Logic & Strict Categorization
+// MACLOVIN NEWS — Editorial Frontend Logic, Subtypes (Repos/Apps) & History Navigation
 
-let rawBriefingData = null;
+let cachedBriefings = {};
 let currentData = {
   tools: [],
   news: [],
@@ -9,7 +9,8 @@ let currentData = {
 };
 
 let activeTab = 'tools';
-let activePricing = 'all';
+let activeToolSubtype = 'all'; // 'all', 'repo', 'app'
+let activePricing = 'all';     // 'all', 'free', 'freemium', 'paid'
 let searchQuery = '';
 
 // DOM Elements
@@ -17,6 +18,7 @@ const dateSelect = document.getElementById('dateSelect');
 const btnSync = document.getElementById('btnSync');
 const searchInput = document.getElementById('searchInput');
 const clearSearch = document.getElementById('clearSearch');
+const toolSubtypeFilters = document.getElementById('toolSubtypeFilters');
 const pricingFilters = document.getElementById('pricingFilters');
 const cardsGrid = document.getElementById('cardsGrid');
 const loadingState = document.getElementById('loadingState');
@@ -48,13 +50,13 @@ const LEARNING_KW = [
 const TOOL_KW = [
   'tool', 'ferramenta', 'software', 'open-source', 'open source', 'código aberto', 'github', 'repositório',
   'repository', 'library', 'biblioteca', 'framework', 'saas', 'extension', 'extensão', 'plugin', 'sdk', 'api',
-  'npm', 'pypi', 'docker', 'qwen', 'llama', 'whisper', 'claude code', 'cursor', 'ollama', 'vllm', 'langchain'
+  'npm', 'pypi', 'docker', 'qwen', 'llama', 'whisper', 'claude code', 'cursor', 'ollama', 'vllm', 'langchain', 'show hn'
 ];
 
 function classifyItemStrict(item) {
-  const text = `${item.title || ''} ${item.summary || ''} ${item.source_id || ''}`.toLowerCase();
+  const text = `${item.title || ''} ${item.summary || ''} ${item.canonical_url || ''} ${item.source_id || ''}`.toLowerCase();
   
-  // 1. Geek & Games prioritário (impede games em ferramentas)
+  // 1. Geek & Games prioritário
   for (const kw of GEEK_KW) {
     if (text.includes(kw)) return 'geek';
   }
@@ -64,17 +66,27 @@ function classifyItemStrict(item) {
     if (text.includes(kw)) return 'learning';
   }
   
-  // 3. Ferramentas reais de software
+  // 3. Ferramentas reais
   for (const kw of TOOL_KW) {
     if (text.includes(kw)) return 'tools';
   }
   
-  // 4. Default por tipo ou notícia
   if (item.item_type === 'tool' && !GEEK_KW.some(k => text.includes(k))) return 'tools';
   if (item.item_type === 'learning') return 'learning';
   if (item.item_type === 'geek') return 'geek';
 
   return 'news';
+}
+
+function detectToolSubtype(item) {
+  if (item.tool_subtype === 'repo' || item.tool_subtype === 'app') {
+    return item.tool_subtype;
+  }
+  const text = `${item.title || ''} ${item.summary || ''} ${item.canonical_url || ''}`.toLowerCase();
+  if (text.includes('github.com') || text.includes('gitlab.com') || text.includes('huggingface.co') || text.includes('repositório') || text.includes('repository') || text.includes('código aberto') || text.includes('open-source') || text.includes('open source')) {
+    return 'repo';
+  }
+  return 'app';
 }
 
 // Initialize
@@ -92,26 +104,42 @@ function setupEventListeners() {
       btn.classList.add('active');
       activeTab = btn.dataset.tab;
       
-      // Filtros de preço apenas na aba de ferramentas
+      // Mostrar filtros de subtipo e preço apenas na aba de ferramentas
       if (activeTab === 'tools') {
-        pricingFilters.classList.remove('hidden');
+        if (toolSubtypeFilters) toolSubtypeFilters.classList.remove('hidden');
+        if (pricingFilters) pricingFilters.classList.remove('hidden');
       } else {
-        pricingFilters.classList.add('hidden');
+        if (toolSubtypeFilters) toolSubtypeFilters.classList.add('hidden');
+        if (pricingFilters) pricingFilters.classList.add('hidden');
       }
 
       renderCards();
     });
   });
 
-  // Pricing Chips
-  document.querySelectorAll('.filter-tag').forEach(tag => {
-    tag.addEventListener('click', () => {
-      document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
-      tag.classList.add('active');
-      activePricing = tag.dataset.pricing;
-      renderCards();
+  // Tool Subtype Chips (Repos vs Apps)
+  if (toolSubtypeFilters) {
+    toolSubtypeFilters.querySelectorAll('.filter-tag').forEach(tag => {
+      tag.addEventListener('click', () => {
+        toolSubtypeFilters.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+        tag.classList.add('active');
+        activeToolSubtype = tag.dataset.subtype;
+        renderCards();
+      });
     });
-  });
+  }
+
+  // Pricing Chips
+  if (pricingFilters) {
+    pricingFilters.querySelectorAll('.filter-tag').forEach(tag => {
+      tag.addEventListener('click', () => {
+        pricingFilters.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+        tag.classList.add('active');
+        activePricing = tag.dataset.pricing;
+        renderCards();
+      });
+    });
+  }
 
   // Search Input
   searchInput.addEventListener('input', (e) => {
@@ -131,7 +159,7 @@ function setupEventListeners() {
     renderCards();
   });
 
-  // Date Change
+  // Date Change: Carrega qualquer dia anterior selecionado
   dateSelect.addEventListener('change', () => {
     fetchBriefing(dateSelect.value);
   });
@@ -165,9 +193,6 @@ function setupEventListeners() {
 }
 
 function applyData(data) {
-  rawBriefingData = data;
-  
-  // Reorganizar deterministicamente todos os itens para garantir pureza de categoria
   const allItems = [
     ...(data.tools || []),
     ...(data.news || []),
@@ -183,6 +208,8 @@ function applyData(data) {
   allItems.forEach(it => {
     const cat = classifyItemStrict(it);
     it.item_type = cat === 'tools' ? 'tool' : cat;
+    it.tool_subtype = detectToolSubtype(it);
+    
     if (cat === 'tools') tools.push(it);
     else if (cat === 'learning') learning.push(it);
     else if (cat === 'geek') geek.push(it);
@@ -200,7 +227,7 @@ function applyData(data) {
   badgeLearning.textContent = currentData.learning.length;
   badgeGeek.textContent = currentData.geek.length;
 
-  // Formatar data de exibição
+  // Formatar data de exibição da edição
   if (data.date) {
     try {
       const parts = data.date.split('-');
@@ -244,7 +271,7 @@ async function loadHistoryDates() {
     } else {
       const opt = document.createElement('option');
       opt.value = '';
-      opt.textContent = 'Edição de Hoje';
+      opt.textContent = 'Edição Mais Recente';
       dateSelect.appendChild(opt);
     }
   } catch (err) {
@@ -257,19 +284,40 @@ async function fetchBriefing(date = '') {
   loadingState.classList.remove('hidden');
   emptyState.classList.add('hidden');
 
+  if (date && cachedBriefings[date]) {
+    applyData(cachedBriefings[date]);
+    loadingState.classList.add('hidden');
+    return;
+  }
+
   try {
     let url = date ? `/api/briefing?date=${date}` : '/api/briefing';
     let res = await fetch(url);
     if (!res.ok) {
-      res = await fetch('/data/briefing.json');
+      // Fallback estático para dia específico
+      const dateUrl = date ? `/data/briefings/${date}.json` : '/data/briefing.json';
+      res = await fetch(dateUrl);
+      if (!res.ok) {
+        res = await fetch('/data/briefing.json');
+      }
     }
     const data = await res.json();
+    if (data.date) {
+      cachedBriefings[data.date] = data;
+    }
     applyData(data);
   } catch (err) {
-    console.error('Erro ao carregar briefing:', err);
+    console.error('Erro ao carregar briefing do dia:', err);
   } finally {
     loadingState.classList.add('hidden');
   }
+}
+
+function getSubtypeBadge(subtype) {
+  if (subtype === 'repo') {
+    return `<span class="subtype-badge badge-repo">📦 Repositório GitHub</span>`;
+  }
+  return `<span class="subtype-badge badge-app">🚀 App / SaaS</span>`;
 }
 
 function getPricingBadge(pricing) {
@@ -290,13 +338,18 @@ function renderCards() {
   cardsGrid.innerHTML = '';
   let items = currentData[activeTab] || [];
 
+  // Filtro de subtipo (apenas na aba de ferramentas: Todos, Repos, Apps)
+  if (activeTab === 'tools' && activeToolSubtype !== 'all') {
+    items = items.filter(item => item.tool_subtype === activeToolSubtype);
+  }
+
   // Filtro de preço (apenas na aba de ferramentas)
   if (activeTab === 'tools' && activePricing !== 'all') {
     items = items.filter(item => {
       const p = (item.pricing_model || '').toLowerCase();
       if (activePricing === 'free') return p.includes('grátis') || p.includes('open-source') || p.includes('free');
       if (activePricing === 'freemium') return p.includes('freemium');
-      if (activePricing === 'paid') return p.includes('pago') || p.includes('paid');
+      if (activePricing === 'paid') return p.includes('pago') || p.includes('paid') || p.includes('comercial');
       return true;
     });
   }
@@ -320,7 +373,9 @@ function renderCards() {
     const card = document.createElement('article');
     card.className = 'editorial-card';
 
+    const subtypeBadge = activeTab === 'tools' ? getSubtypeBadge(item.tool_subtype) : '';
     const pricingBadge = (activeTab === 'tools' || item.pricing_model) ? getPricingBadge(item.pricing_model) : '';
+    
     const takeawayBox = item.why_it_matters ? `
       <div class="card-takeaway">
         <strong>Contexto & Impacto:</strong> ${item.why_it_matters}
@@ -349,7 +404,10 @@ function renderCards() {
     card.innerHTML = `
       <div>
         <div class="card-top">
-          <span class="card-source-pill">${item.source_id || 'Fonte'}</span>
+          <div class="card-badges-left">
+            <span class="card-source-pill">${item.source_id || 'Fonte'}</span>
+            ${subtypeBadge}
+          </div>
           ${pricingBadge}
         </div>
         <h3 class="card-headline">${item.title}</h3>
@@ -359,7 +417,7 @@ function renderCards() {
       </div>
       <div class="card-action-bar">
         <a href="${item.canonical_url || '#'}" target="_blank" rel="noopener noreferrer" class="read-btn">
-          Ler matéria completa ↗
+          ${item.tool_subtype === 'repo' ? 'Ver no GitHub ↗' : 'Acessar ferramenta ↗'}
         </a>
         <span class="card-pubtime">${timeFormatted} UTC</span>
       </div>

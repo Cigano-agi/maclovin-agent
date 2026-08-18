@@ -17,10 +17,10 @@
         <span class="live-indicator">
           <span class="pulse-dot"></span> AO VIVO
         </span>
-        <span class="edition-label" id="currentDateDisplay">Edição Diária • Curadoria Automatizada</span>
+        <span class="edition-label" id="currentDateDisplay">Edição Diária • Arquivo Histórico Preservado</span>
       </div>
       <div class="top-bar-right">
-        <span class="coverage-tag">Cobertura: IA • Ferramentas • Engenharia • Geek</span>
+        <span class="coverage-tag">Cobertura: GitHub • X/Twitter • IA • Apps • Geek</span>
       </div>
     </div>
 
@@ -31,7 +31,7 @@
           <span class="brand-icon">⚡</span>
           <h1 class="brand-title">MACLOVIN NEWS</h1>
         </div>
-        <p class="brand-tagline">O radar diário de ferramentas, inteligência artificial, engenharia e universo geek</p>
+        <p class="brand-tagline">O radar diário de repositórios GitHub, apps, inteligência artificial e universo geek</p>
       </div>
 
       <div class="masthead-controls">
@@ -76,16 +76,27 @@
     <section class="command-bar">
       <div class="search-container">
         <span class="search-glyph">🔍</span>
-        <input type="text" id="searchInput" class="search-field" placeholder="Buscar por software, tema, empresa, jogo ou palavra-chave...">
+        <input type="text" id="searchInput" class="search-field" placeholder="Buscar por software, repo GitHub, tema, empresa ou jogo...">
         <button id="clearSearch" class="clear-btn hidden" title="Limpar busca">&times;</button>
       </div>
 
-      <div class="filter-group" id="pricingFilters">
-        <span class="filter-label">Preço:</span>
-        <button class="filter-tag active" data-pricing="all">Todos</button>
-        <button class="filter-tag" data-pricing="free">🟢 Grátis / Open Source</button>
-        <button class="filter-tag" data-pricing="freemium">🟡 Freemium</button>
-        <button class="filter-tag" data-pricing="paid">🔵 Comercial / Pago</button>
+      <div class="filters-row">
+        <!-- Subtipo de Ferramenta: Repositórios vs Apps -->
+        <div class="filter-group" id="toolSubtypeFilters">
+          <span class="filter-label">Categoria:</span>
+          <button class="filter-tag active" data-subtype="all">Todas as Ferramentas</button>
+          <button class="filter-tag" data-subtype="repo">📦 Repositórios GitHub</button>
+          <button class="filter-tag" data-subtype="app">🚀 Aplicativos & SaaS</button>
+        </div>
+
+        <!-- Preços -->
+        <div class="filter-group" id="pricingFilters">
+          <span class="filter-label">Preço:</span>
+          <button class="filter-tag active" data-pricing="all">Todos</button>
+          <button class="filter-tag" data-pricing="free">🟢 Grátis / Open Source</button>
+          <button class="filter-tag" data-pricing="freemium">🟡 Freemium</button>
+          <button class="filter-tag" data-pricing="paid">🔵 Comercial / Pago</button>
+        </div>
       </div>
     </section>
 
@@ -95,7 +106,7 @@
       <div id="loadingState" class="editorial-state hidden">
         <div class="editorial-spinner"></div>
         <h3 class="state-title">Carregando a edição de notícias...</h3>
-        <p class="state-desc">Processando feeds e extraindo pontos-chave.</p>
+        <p class="state-desc">Buscando edições salvas e processando matérias.</p>
       </div>
 
       <!-- Empty State -->
@@ -114,15 +125,15 @@
       <div class="footer-top">
         <div class="footer-brand">
           <span class="footer-logo">⚡ MACLOVIN NEWS</span>
-          <p class="footer-copy">Plataforma independente de curadoria e inteligência técnica.</p>
+          <p class="footer-copy">Plataforma independente de curadoria diária com histórico completo arquivado.</p>
         </div>
         <div class="footer-meta" id="footerStats">
           <span>Carregando estatísticas da edição...</span>
         </div>
       </div>
       <div class="footer-bottom">
-        <span>© 2026 Maclovin News • Processamento 100% Local & Privado</span>
-        <span>Feeds verificados: TechCrunch • The Verge • Hugging Face • O Vício • Legião dos Heróis • IGN • Dev.to</span>
+        <span>© 2026 Maclovin News • Edições Anteriores Salvas e Imutáveis</span>
+        <span>Fontes: GitHub • Show HN • TechCrunch • The Verge • Hugging Face • O Vício • Legião dos Heróis • IGN</span>
       </div>
     </footer>
   </div>

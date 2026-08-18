@@ -4,7 +4,7 @@ import pathlib
 import re
 from datetime import datetime, timezone
 from maclovin.intelligence.translator import translate_to_pt_br
-from maclovin.ingestion.category_classifier import classify_category
+from maclovin.ingestion.category_classifier import classify_category, classify_tool_subtype
 
 
 def extract_briefing_from_markdown(file_path: pathlib.Path) -> dict:
@@ -71,8 +71,8 @@ def extract_briefing_from_markdown(file_path: pathlib.Path) -> dict:
             translated_summary = translate_to_pt_br(summary or title)
             translated_why = translate_to_pt_br(why) if why else "Acompanhamento relevante para inovação e desenvolvimento."
 
-            # Determinar a categoria real do item usando o classificador estrito
             real_cat = classify_category(translated_title, translated_summary, current_section)
+            subtype = classify_tool_subtype(translated_title, translated_summary, url) if real_cat == "tools" else "app"
 
             item = {
                 "id": f"{real_cat}-{len(tools)+len(news)+len(learning)+len(geek)+1}",
@@ -84,6 +84,7 @@ def extract_briefing_from_markdown(file_path: pathlib.Path) -> dict:
                 "why_it_matters": translated_why,
                 "pricing_model": pricing,
                 "item_type": "tool" if real_cat == "tools" else real_cat,
+                "tool_subtype": subtype,
                 "key_features": [translate_to_pt_br(f) for f in features],
             }
 
@@ -117,6 +118,21 @@ def app(environ, start_response):
     query_str = environ.get("QUERY_STRING", "")
     params = urllib.parse.parse_qs(query_str)
     target_date_str = params.get("date", [None])[0]
+
+    # 1. Tentar ler do JSON específico do dia em public/data/briefings/{date}.json
+    if target_date_str:
+        specific_json = pathlib.Path(f"public/data/briefings/{target_date_str}.json")
+        if specific_json.exists():
+            payload = json.loads(specific_json.read_text(encoding="utf-8"))
+            body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+            status = "200 OK"
+            headers = [
+                ("Content-Type", "application/json; charset=utf-8"),
+                ("Access-Control-Allow-Origin", "*"),
+                ("Content-Length", str(len(body))),
+            ]
+            start_response(status, headers)
+            return [body]
 
     briefings_dir = pathlib.Path("briefings")
     selected_file = None

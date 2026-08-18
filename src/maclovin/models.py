@@ -64,6 +64,7 @@ class NewsItem(BaseModel):
     topic_ids: List[str] = Field(default_factory=list)
     relevance_score: float = 0.0
     item_type: str = "news"  # "news", "tool", "learning", "geek"
+    tool_subtype: str = "app"  # "repo" (repositório GitHub/open-source) ou "app" (software/SaaS)
     pricing_model: str = "Não especificado"  # "Grátis / Open-Source", "Freemium", "Pago", "Não especificado"
     key_features: List[str] = Field(default_factory=list)
     summary: Optional[str] = None
