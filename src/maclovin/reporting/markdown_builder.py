@@ -33,12 +33,13 @@ def generate_markdown_report(report: BriefingReport) -> str:
         lines.append("\n---\n")
 
     has_tools = bool(report.tools_and_launches)
+    has_opps = bool(report.opportunity_items)
     has_biz = bool(report.business_items)
     has_news = bool(report.events or report.standalone_news)
     has_learning = bool(report.learning_items)
     has_geek = bool(report.geek_items)
 
-    if not has_tools and not has_biz and not has_news and not has_learning and not has_geek:
+    if not has_tools and not has_opps and not has_biz and not has_news and not has_learning and not has_geek:
         lines.append("## ℹ️ Nenhuma Atualização Relevante Encontrada\n")
         lines.append("Nenhum conteúdo publicado no período atendeu aos critérios dos tópicos configurados.\n")
         return "\n".join(lines)
@@ -69,7 +70,22 @@ def generate_markdown_report(report: BriefingReport) -> str:
             lines.append(f"🔗 **Link Direto:** [{url}]({url})\n")
             lines.append("---\n")
 
-    # 2. SEÇÃO DE BUSINESS, STARTUPS & INVESTIMENTOS
+    # 2. SEÇÃO DE OPORTUNIDADES DE NEGÓCIO & MONETIZAÇÃO
+    if has_opps:
+        lines.append("## 💡 Oportunidades de Negócio, Lucro & Soluções Empresariais\n")
+        for idx, item in enumerate(report.opportunity_items, 1):
+            title = sanitize_markdown_text(item.title)
+            url = sanitize_url(item.canonical_url)
+            lines.append(f"### {idx}. {title}")
+            lines.append(f"**Fonte:** `{sanitize_markdown_text(item.source_id)}`\n")
+            if item.summary:
+                lines.append(f"> {sanitize_markdown_text(item.summary)}\n")
+            if item.why_it_matters:
+                lines.append(f"💰 **Como Lucrar ou Aplicar na Empresa:** {sanitize_markdown_text(item.why_it_matters)}\n")
+            lines.append(f"🔗 **Link:** [{url}]({url})\n")
+            lines.append("---\n")
+
+    # 3. SEÇÃO DE BUSINESS, STARTUPS & INVESTIMENTOS
     if has_biz:
         lines.append("## 💼 Business, Startups & Investimentos\n")
         for idx, item in enumerate(report.business_items, 1):

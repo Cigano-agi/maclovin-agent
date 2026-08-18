@@ -14,6 +14,7 @@ def app(environ, start_response):
         report = pipeline.run(dry_run=True)
 
         tools = [it.model_dump(mode="json") for it in report.tools_and_launches]
+        opportunities = [it.model_dump(mode="json") for it in report.opportunity_items]
         business = [it.model_dump(mode="json") for it in report.business_items]
         news = [it.model_dump(mode="json") for it in report.standalone_news] + [
             {
@@ -34,8 +35,9 @@ def app(environ, start_response):
         geek = [it.model_dump(mode="json") for it in report.geek_items]
 
         # Garantir re-classificação estrita
-        all_items = tools + business + news + learning + geek
+        all_items = tools + opportunities + business + news + learning + geek
         final_tools = []
+        final_opportunities = []
         final_business = []
         final_news = []
         final_learning = []
@@ -46,6 +48,8 @@ def app(environ, start_response):
             item["item_type"] = "tool" if cat == "tools" else cat
             if cat == "tools":
                 final_tools.append(item)
+            elif cat == "opportunities":
+                final_opportunities.append(item)
             elif cat == "business":
                 final_business.append(item)
             elif cat == "learning":
@@ -58,8 +62,9 @@ def app(environ, start_response):
         payload = {
             "status": "SUCCESS",
             "date": report.reference_date.isoformat(),
-            "total_items": len(final_tools) + len(final_business) + len(final_news) + len(final_learning) + len(final_geek),
+            "total_items": len(final_tools) + len(final_opportunities) + len(final_business) + len(final_news) + len(final_learning) + len(final_geek),
             "tools": final_tools,
+            "opportunities": final_opportunities,
             "business": final_business,
             "news": final_news,
             "learning": final_learning,
@@ -67,7 +72,7 @@ def app(environ, start_response):
             "latest_execution": {
                 "reference_date": report.reference_date.isoformat(),
                 "status": "SUCCESS",
-                "items_collected_count": len(final_tools) + len(final_business) + len(final_news) + len(final_learning) + len(final_geek),
+                "items_collected_count": len(final_tools) + len(final_opportunities) + len(final_business) + len(final_news) + len(final_learning) + len(final_geek),
             },
         }
 

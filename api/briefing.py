@@ -12,6 +12,7 @@ def extract_briefing_from_markdown(file_path: pathlib.Path) -> dict:
     ref_date = file_path.stem
 
     tools = []
+    opportunities = []
     business = []
     news = []
     learning = []
@@ -25,6 +26,8 @@ def extract_briefing_from_markdown(file_path: pathlib.Path) -> dict:
         line = lines[i].strip()
         if "## 🛠️ Radar de Ferramentas" in line:
             current_section = "tools"
+        elif "## 💡 Oportunidades" in line:
+            current_section = "opportunities"
         elif "## 💼 Business" in line:
             current_section = "business"
         elif "## 📚 Aprender Tecnologia" in line:
@@ -60,8 +63,8 @@ def extract_briefing_from_markdown(file_path: pathlib.Path) -> dict:
                         pricing = "Pago"
                 elif sub.startswith("> **O que faz:**") or sub.startswith(">"):
                     summary = sub.replace("> **O que faz:**", "").replace(">", "").strip()
-                elif "💡" in sub:
-                    why = re.sub(r"^💡\s*(\*\*[^:]+:\*\*)?\s*", "", sub)
+                elif "💡" in sub or "💰" in sub:
+                    why = re.sub(r"^[💡💰]\s*(\*\*[^:]+:\*\*)?\s*", "", sub)
                 elif sub.startswith("- ✔"):
                     features.append(sub.replace("- ✔", "").strip())
                 elif "🔗 **Link" in sub:
@@ -78,7 +81,7 @@ def extract_briefing_from_markdown(file_path: pathlib.Path) -> dict:
             subtype = classify_tool_subtype(translated_title, translated_summary, url) if real_cat == "tools" else "app"
 
             item = {
-                "id": f"{real_cat}-{len(tools)+len(business)+len(news)+len(learning)+len(geek)+1}",
+                "id": f"{real_cat}-{len(tools)+len(opportunities)+len(business)+len(news)+len(learning)+len(geek)+1}",
                 "source_id": source_id,
                 "title": translated_title,
                 "canonical_url": url,
@@ -93,6 +96,8 @@ def extract_briefing_from_markdown(file_path: pathlib.Path) -> dict:
 
             if real_cat == "tools":
                 tools.append(item)
+            elif real_cat == "opportunities":
+                opportunities.append(item)
             elif real_cat == "business":
                 business.append(item)
             elif real_cat == "learning":
@@ -106,8 +111,9 @@ def extract_briefing_from_markdown(file_path: pathlib.Path) -> dict:
 
     return {
         "date": ref_date,
-        "total_items": len(tools) + len(business) + len(news) + len(learning) + len(geek),
+        "total_items": len(tools) + len(opportunities) + len(business) + len(news) + len(learning) + len(geek),
         "tools": tools,
+        "opportunities": opportunities,
         "business": business,
         "learning": learning,
         "geek": geek,
@@ -115,7 +121,7 @@ def extract_briefing_from_markdown(file_path: pathlib.Path) -> dict:
         "latest_execution": {
             "reference_date": ref_date,
             "status": "SUCCESS",
-            "items_collected_count": len(tools) + len(business) + len(news) + len(learning) + len(geek),
+            "items_collected_count": len(tools) + len(opportunities) + len(business) + len(news) + len(learning) + len(geek),
         },
     }
 
@@ -164,6 +170,7 @@ def app(environ, start_response):
                 "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
                 "total_items": 0,
                 "tools": [],
+                "opportunities": [],
                 "business": [],
                 "learning": [],
                 "geek": [],

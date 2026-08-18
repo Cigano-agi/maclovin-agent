@@ -2,6 +2,7 @@
 
 Categorias suportadas:
 - 'tools': Softwares, bibliotecas, repositórios GitHub, frameworks, APIs, modelos e extensões de código/produtividade.
+- 'opportunities': Ideias de negócios, micro-SaaS, ferramentas para aplicar na empresa, soluções white-label, monetização e oportunidades B2B.
 - 'business': Investimentos, valuation, Venture Capital, fusões e aquisições (M&A), startups, IPOs, lucros, demissões e mercado tech.
 - 'news': Grandes anúncios do ecossistema de IA, regulação governamental, OpenAI, Google, Anthropic, novos modelos e debates.
 - 'learning': Tutoriais, arquitetura de sistemas, deep dives, papers, guias técnicos e engenharia.
@@ -28,6 +29,14 @@ LEARNING_KEYWORDS = [
     "system design", "design de sistemas", "engenharia de software", "aprenda", "curso", "explorando",
 ]
 
+OPPORTUNITY_KEYWORDS = [
+    "oportunidade", "opportunity", "monetizar", "monetization", "como lucrar", "vender", "venda", "ideia de negócio",
+    "business idea", "micro-saas", "micro saas", "side project", "indie hacker", "white-label", "white label",
+    "automação empresarial", "solução para empresas", "reduzir custos", "para sua empresa", "aplicar no negócio",
+    "mvp", "boilerplate", "template comercial", "b2b", "para clientes", "case de sucesso", "solução comercial",
+    "como implementar na empresa", "transforme em produto",
+]
+
 BUSINESS_KEYWORDS = [
     "funding", "valuation", "venture capital", "vc", "round", "rodada", "investimento", "investors", "investidores",
     "m&a", "acquisition", "acquire", "adquire", "aquisição", "comprar", "comprou", "startup", "startups",
@@ -50,7 +59,7 @@ MARKET_NEWS_KEYWORDS = [
 
 
 def classify_category(title: str, text: str = "", source_category: str = "news") -> str:
-    """Classifica a matéria na categoria correta: 'geek', 'learning', 'tools', 'business' ou 'news'."""
+    """Classifica a matéria na categoria correta: 'geek', 'learning', 'opportunities', 'business', 'tools' ou 'news'."""
     combined = f"{title} {text}".lower()
 
     # 1. Checagem prioritária para Cultura Geek & Games
@@ -58,27 +67,32 @@ def classify_category(title: str, text: str = "", source_category: str = "news")
         if re.search(r"\b" + re.escape(kw) + r"\b", combined):
             return "geek"
 
-    # 2. Checagem para Tutoriais e Aprendizado Técnico
+    # 2. Checagem para Oportunidades de Negócio & Monetização
+    for kw in OPPORTUNITY_KEYWORDS:
+        if re.search(r"\b" + re.escape(kw) + r"\b", combined):
+            return "opportunities"
+
+    # 3. Checagem para Tutoriais e Aprendizado Técnico
     for kw in LEARNING_KEYWORDS:
         if re.search(r"\b" + re.escape(kw) + r"\b", combined):
             return "learning"
 
-    # 3. Checagem para Business, Startups & Investimentos (M&A, Funding, Valuation, etc.)
+    # 4. Checagem para Business, Startups & Investimentos
     for kw in BUSINESS_KEYWORDS:
         if re.search(r"\b" + re.escape(kw) + r"\b", combined):
             return "business"
 
-    # 4. Checagem para Ferramentas reais
+    # 5. Checagem para Ferramentas reais
     has_tool_kw = any(re.search(r"\b" + re.escape(kw) + r"\b", combined) for kw in TOOL_KEYWORDS)
     if has_tool_kw:
         return "tools"
 
-    # 5. Checagem para Notícias de Mercado
+    # 6. Checagem para Notícias de Mercado
     has_news_kw = any(re.search(r"\b" + re.escape(kw) + r"\b", combined) for kw in MARKET_NEWS_KEYWORDS)
     if has_news_kw:
         return "news"
 
-    if source_category in ("geek", "learning", "tools", "business", "news"):
+    if source_category in ("geek", "learning", "opportunities", "tools", "business", "news"):
         return source_category
 
     return "news"
@@ -101,6 +115,7 @@ def refine_item_category(item: NewsItem, default_source_cat: str = "news") -> Ne
     
     topic_map = {
         "geek": "geek-culture",
+        "opportunities": "market-opportunities",
         "learning": "tech-learning",
         "business": "tech-business",
         "tools": "ai-tools",

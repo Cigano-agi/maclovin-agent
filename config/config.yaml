@@ -43,6 +43,32 @@ topics:
     active: true
     priority: 1
 
+  - id: "market-opportunities"
+    name: "💡 Oportunidades de Negócio, Lucro & Aplicação Empresarial"
+    keywords:
+      - "Oportunidade"
+      - "Monetizar"
+      - "Monetization"
+      - "Como lucrar"
+      - "Micro-SaaS"
+      - "SaaS"
+      - "Vender"
+      - "Enterprise"
+      - "Automação"
+      - "B2B"
+      - "White Label"
+      - "White-label"
+      - "MVP"
+      - "Reduzir custos"
+      - "Solução para empresas"
+      - "Indie Hacker"
+      - "Side Project"
+      - "Template"
+      - "Boilerplate"
+      - "Case de sucesso"
+    active: true
+    priority: 1
+
   - id: "tech-business"
     name: "💼 Business, Startups & Investimentos"
     keywords:
@@ -176,7 +202,16 @@ sources:
     active: true
     timeout_seconds: 15
 
-  # 2. Business, Startups & Venture Capital
+  # 2. Oportunidades de Negócio & Enterprise Solutions
+  - id: "techcrunch-enterprise"
+    name: "TechCrunch Enterprise & B2B Solutions"
+    ingestion_type: "rss"
+    url: "https://techcrunch.com/category/enterprise/feed/"
+    category: "opportunities"
+    active: true
+    timeout_seconds: 15
+
+  # 3. Business, Startups & Venture Capital
   - id: "techcrunch-startups"
     name: "TechCrunch Startups & Venture"
     ingestion_type: "rss"
@@ -193,7 +228,7 @@ sources:
     active: true
     timeout_seconds: 15
 
-  # 3. Notícias & Mercado de IA
+  # 4. Notícias & Mercado de IA
   - id: "techcrunch-ai"
     name: "TechCrunch AI & Big Tech"
     ingestion_type: "rss"
@@ -210,7 +245,7 @@ sources:
     active: true
     timeout_seconds: 15
 
-  # 4. Aprender Tecnologia, Tutoriais & Deep Dives
+  # 5. Aprender Tecnologia, Tutoriais & Deep Dives
   - id: "dev-to-ai"
     name: "Dev.to (Tutoriais & Engenharia)"
     ingestion_type: "rss"
@@ -227,7 +262,7 @@ sources:
     active: true
     timeout_seconds: 15
 
-  # 5. Universo Geek, Games, Cinema & HQs
+  # 6. Universo Geek, Games, Cinema & HQs
   - id: "ovicio-geek"
     name: "O Vício (HQs, Cinema & Animes)"
     ingestion_type: "rss"

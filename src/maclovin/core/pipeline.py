@@ -19,7 +19,7 @@ from maclovin.reporting.console_printer import print_console_summary
 
 
 class Pipeline:
-    """Orquestrador principal do ciclo diário de inteligência de notícias, ferramentas, business, aprendizado e geek."""
+    """Orquestrador principal do ciclo diário de inteligência de notícias, ferramentas, business, oportunidades, aprendizado e geek."""
 
     def __init__(
         self,
@@ -84,6 +84,7 @@ class Pipeline:
         # 5. Processamento de Inteligência (Refinamento, Resumos & Agrupamento)
         events: List[EventCluster] = []
         tools_list: List[NewsItem] = []
+        opportunity_list: List[NewsItem] = []
         business_list: List[NewsItem] = []
         learning_list: List[NewsItem] = []
         geek_list: List[NewsItem] = []
@@ -102,6 +103,8 @@ class Pipeline:
                     refine_item_category(it, source_category_map.get(it.source_id, "news"))
                     if it.item_type == "tool":
                         tools_list.append(it)
+                    elif it.item_type == "opportunities":
+                        opportunity_list.append(it)
                     elif it.item_type == "business":
                         business_list.append(it)
                     elif it.item_type == "learning":
@@ -119,6 +122,8 @@ class Pipeline:
                     refine_item_category(it, source_category_map.get(it.source_id, "news"))
                     if it.item_type == "tool":
                         tools_list.append(it)
+                    elif it.item_type == "opportunities":
+                        opportunity_list.append(it)
                     elif it.item_type == "business":
                         business_list.append(it)
                     elif it.item_type == "learning":
@@ -132,6 +137,8 @@ class Pipeline:
                 refine_item_category(it, source_category_map.get(it.source_id, "news"))
                 if it.item_type == "tool":
                     tools_list.append(it)
+                elif it.item_type == "opportunities":
+                    opportunity_list.append(it)
                 elif it.item_type == "business":
                     business_list.append(it)
                 elif it.item_type == "learning":
@@ -170,6 +177,7 @@ class Pipeline:
             "sources_failed": sources_failed,
             "total_news": len(matched_items),
             "tools_count": len(tools_list),
+            "opportunities_count": len(opportunity_list),
             "business_count": len(business_list),
             "learning_count": len(learning_list),
             "geek_count": len(geek_list),
@@ -184,6 +192,7 @@ class Pipeline:
             events=events,
             tools_and_launches=tools_list,
             business_items=business_list,
+            opportunity_items=opportunity_list,
             learning_items=learning_list,
             geek_items=geek_list,
             standalone_news=news_list if not events else [],

@@ -1,8 +1,9 @@
-// MACLOVIN NEWS — Editorial Frontend Logic, Subtypes (Repos/Apps), Business & History
+// MACLOVIN NEWS — Editorial Frontend Logic, Subtypes, Opportunities, Business & History
 
 let cachedBriefings = {};
 let currentData = {
   tools: [],
+  opportunities: [],
   business: [],
   news: [],
   learning: [],
@@ -28,6 +29,7 @@ const footerStats = document.getElementById('footerStats');
 const currentDateDisplay = document.getElementById('currentDateDisplay');
 
 const badgeTools = document.getElementById('badgeTools');
+const badgeOpportunities = document.getElementById('badgeOpportunities');
 const badgeBusiness = document.getElementById('badgeBusiness');
 const badgeNews = document.getElementById('badgeNews');
 const badgeLearning = document.getElementById('badgeLearning');
@@ -47,6 +49,14 @@ const LEARNING_KW = [
   'arquitetura', 'architecture', 'deep dive', 'deep-dive', 'paper', 'whitepaper', 'benchmark',
   'como funciona', 'how it works', 'best practices', 'boas práticas', 'roadmap', 'cheatsheet', 'handbook',
   'system design', 'engenharia de software', 'aprenda', 'curso'
+];
+
+const OPPORTUNITY_KW = [
+  'oportunidade', 'opportunity', 'monetizar', 'monetization', 'como lucrar', 'vender', 'venda', 'ideia de negócio',
+  'business idea', 'micro-saas', 'micro saas', 'side project', 'indie hacker', 'white-label', 'white label',
+  'automação empresarial', 'solução para empresas', 'reduzir custos', 'para sua empresa', 'aplicar no negócio',
+  'mvp', 'boilerplate', 'template comercial', 'b2b', 'para clientes', 'case de sucesso', 'solução comercial',
+  'como implementar na empresa', 'transforme em produto'
 ];
 
 const BUSINESS_KW = [
@@ -71,22 +81,28 @@ function classifyItemStrict(item) {
     if (text.includes(kw)) return 'geek';
   }
   
-  // 2. Aprender & Deep Dives
+  // 2. Oportunidades & Monetização
+  for (const kw of OPPORTUNITY_KW) {
+    if (text.includes(kw)) return 'opportunities';
+  }
+
+  // 3. Aprender & Deep Dives
   for (const kw of LEARNING_KW) {
     if (text.includes(kw)) return 'learning';
   }
 
-  // 3. Business, Startups & Investimentos
+  // 4. Business, Startups & Investimentos
   for (const kw of BUSINESS_KW) {
     if (text.includes(kw)) return 'business';
   }
   
-  // 4. Ferramentas reais
+  // 5. Ferramentas reais
   for (const kw of TOOL_KW) {
     if (text.includes(kw)) return 'tools';
   }
   
   if (item.item_type === 'tool' && !GEEK_KW.some(k => text.includes(k))) return 'tools';
+  if (item.item_type === 'opportunities') return 'opportunities';
   if (item.item_type === 'business') return 'business';
   if (item.item_type === 'learning') return 'learning';
   if (item.item_type === 'geek') return 'geek';
@@ -189,7 +205,7 @@ function setupEventListeners() {
       const res = await fetch('/api/run', { method: 'POST' });
       if (res.ok) {
         const payload = await res.json();
-        if (payload.tools || payload.business || payload.news || payload.learning || payload.geek) {
+        if (payload.tools || payload.opportunities || payload.business || payload.news || payload.learning || payload.geek) {
           applyData(payload);
         } else {
           await loadHistoryDates();
@@ -211,6 +227,7 @@ function setupEventListeners() {
 function applyData(data) {
   const allItems = [
     ...(data.tools || []),
+    ...(data.opportunities || []),
     ...(data.business || []),
     ...(data.news || []),
     ...(data.learning || []),
@@ -218,6 +235,7 @@ function applyData(data) {
   ];
 
   const tools = [];
+  const opportunities = [];
   const business = [];
   const news = [];
   const learning = [];
@@ -229,6 +247,7 @@ function applyData(data) {
     it.tool_subtype = detectToolSubtype(it);
     
     if (cat === 'tools') tools.push(it);
+    else if (cat === 'opportunities') opportunities.push(it);
     else if (cat === 'business') business.push(it);
     else if (cat === 'learning') learning.push(it);
     else if (cat === 'geek') geek.push(it);
@@ -236,6 +255,7 @@ function applyData(data) {
   });
 
   currentData.tools = tools;
+  currentData.opportunities = opportunities;
   currentData.business = business;
   currentData.news = news;
   currentData.learning = learning;
@@ -243,6 +263,7 @@ function applyData(data) {
 
   // Atualizar badges dos contadores
   if (badgeTools) badgeTools.textContent = currentData.tools.length;
+  if (badgeOpportunities) badgeOpportunities.textContent = currentData.opportunities.length;
   if (badgeBusiness) badgeBusiness.textContent = currentData.business.length;
   if (badgeNews) badgeNews.textContent = currentData.news.length;
   if (badgeLearning) badgeLearning.textContent = currentData.learning.length;
@@ -396,9 +417,13 @@ function renderCards() {
     const subtypeBadge = activeTab === 'tools' ? getSubtypeBadge(item.tool_subtype) : '';
     const pricingBadge = (activeTab === 'tools' || item.pricing_model) ? getPricingBadge(item.pricing_model) : '';
     
+    let takeawayLabel = 'Contexto & Impacto:';
+    if (activeTab === 'opportunities') takeawayLabel = '💰 Como Lucrar ou Aplicar na Empresa:';
+    else if (activeTab === 'business') takeawayLabel = 'Análise de Mercado:';
+
     const takeawayBox = item.why_it_matters ? `
       <div class="card-takeaway">
-        <strong>${activeTab === 'business' ? 'Análise de Mercado:' : 'Contexto & Impacto:'}</strong> ${item.why_it_matters}
+        <strong>${takeawayLabel}</strong> ${item.why_it_matters}
       </div>
     ` : '';
 
@@ -421,6 +446,13 @@ function renderCards() {
       }
     }
 
+    let ctaLabel = 'Ler matéria completa ↗';
+    if (activeTab === 'tools') {
+      ctaLabel = item.tool_subtype === 'repo' ? 'Ver no GitHub ↗' : 'Acessar ferramenta ↗';
+    } else if (activeTab === 'opportunities') {
+      ctaLabel = 'Explorar oportunidade ↗';
+    }
+
     card.innerHTML = `
       <div>
         <div class="card-top">
@@ -437,7 +469,7 @@ function renderCards() {
       </div>
       <div class="card-action-bar">
         <a href="${item.canonical_url || '#'}" target="_blank" rel="noopener noreferrer" class="read-btn">
-          ${item.tool_subtype === 'repo' && activeTab === 'tools' ? 'Ver no GitHub ↗' : 'Ler matéria completa ↗'}
+          ${ctaLabel}
         </a>
         <span class="card-pubtime">${timeFormatted} UTC</span>
       </div>
