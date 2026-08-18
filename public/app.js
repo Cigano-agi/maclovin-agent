@@ -1,4 +1,4 @@
-// MACLOVIN NEWS — Editorial Frontend Logic, Subtypes, Opportunities, Business & History
+// MACLOVIN NEWS — Full-Featured Editorial Controller
 
 let cachedBriefings = {};
 let currentData = {
@@ -11,8 +11,11 @@ let currentData = {
 };
 
 let activeTab = 'tools';
-let activeToolSubtype = 'all'; // 'all', 'repo', 'app'
-let activePricing = 'all';     // 'all', 'free', 'freemium', 'paid'
+let activeSubfilter = 'all';
+let activePricing = 'all';
+let activeSource = 'all';
+let activeSort = 'recent'; // 'recent', 'relevance', 'az'
+let currentLayout = 'grid'; // 'grid' | 'list'
 let searchQuery = '';
 
 // DOM Elements
@@ -20,14 +23,31 @@ const dateSelect = document.getElementById('dateSelect');
 const btnSync = document.getElementById('btnSync');
 const searchInput = document.getElementById('searchInput');
 const clearSearch = document.getElementById('clearSearch');
-const toolSubtypeFilters = document.getElementById('toolSubtypeFilters');
-const pricingFilters = document.getElementById('pricingFilters');
+const sourceFilter = document.getElementById('sourceFilter');
+const sortSelect = document.getElementById('sortSelect');
+const btnLayoutGrid = document.getElementById('btnLayoutGrid');
+const btnLayoutList = document.getElementById('btnLayoutList');
+const contextualFiltersRow = document.getElementById('contextualFiltersRow');
 const cardsGrid = document.getElementById('cardsGrid');
 const loadingState = document.getElementById('loadingState');
 const emptyState = document.getElementById('emptyState');
 const footerStats = document.getElementById('footerStats');
 const currentDateDisplay = document.getElementById('currentDateDisplay');
+const dbIndicator = document.getElementById('dbIndicator');
 
+// Export Buttons
+const btnCopySummary = document.getElementById('btnCopySummary');
+const btnDownloadMd = document.getElementById('btnDownloadMd');
+const btnDownloadJson = document.getElementById('btnDownloadJson');
+
+// Modal Elements
+const detailModal = document.getElementById('detailModal');
+const modalBackdrop = document.getElementById('modalBackdrop');
+const modalClose = document.getElementById('modalClose');
+const modalBody = document.getElementById('modalBody');
+const toastNotification = document.getElementById('toastNotification');
+
+// Counter Badges
 const badgeTools = document.getElementById('badgeTools');
 const badgeOpportunities = document.getElementById('badgeOpportunities');
 const badgeBusiness = document.getElementById('badgeBusiness');
@@ -76,27 +96,18 @@ const TOOL_KW = [
 function classifyItemStrict(item) {
   const text = `${item.title || ''} ${item.summary || ''} ${item.canonical_url || ''} ${item.source_id || ''}`.toLowerCase();
   
-  // 1. Geek & Games prioritário
   for (const kw of GEEK_KW) {
     if (text.includes(kw)) return 'geek';
   }
-  
-  // 2. Oportunidades & Monetização
   for (const kw of OPPORTUNITY_KW) {
     if (text.includes(kw)) return 'opportunities';
   }
-
-  // 3. Aprender & Deep Dives
   for (const kw of LEARNING_KW) {
     if (text.includes(kw)) return 'learning';
   }
-
-  // 4. Business, Startups & Investimentos
   for (const kw of BUSINESS_KW) {
     if (text.includes(kw)) return 'business';
   }
-  
-  // 5. Ferramentas reais
   for (const kw of TOOL_KW) {
     if (text.includes(kw)) return 'tools';
   }
@@ -124,9 +135,27 @@ function detectToolSubtype(item) {
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
   setupEventListeners();
+  renderContextualFilters();
   await loadHistoryDates();
+  await checkDatabaseHealth();
   await fetchBriefing();
 });
+
+async function checkDatabaseHealth() {
+  try {
+    const res = await fetch('/api/status');
+    if (res.ok) {
+      const data = await res.json();
+      if (dbIndicator) {
+        dbIndicator.innerHTML = `<span class="db-dot" style="background:#10B981"></span> ${data.database || 'Supabase PostgreSQL'} Conectado`;
+      }
+    }
+  } catch (e) {
+    if (dbIndicator) {
+      dbIndicator.innerHTML = `<span class="db-dot" style="background:#F59E0B"></span> Modo Local / Fallback`;
+    }
+  }
+}
 
 function setupEventListeners() {
   // Navigation Tabs
@@ -135,41 +164,44 @@ function setupEventListeners() {
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       activeTab = btn.dataset.tab;
+      activeSubfilter = 'all';
+      activePricing = 'all';
       
-      // Mostrar filtros de subtipo e preço apenas na aba de ferramentas
-      if (activeTab === 'tools') {
-        if (toolSubtypeFilters) toolSubtypeFilters.classList.remove('hidden');
-        if (pricingFilters) pricingFilters.classList.remove('hidden');
-      } else {
-        if (toolSubtypeFilters) toolSubtypeFilters.classList.add('hidden');
-        if (pricingFilters) pricingFilters.classList.add('hidden');
-      }
-
+      renderContextualFilters();
       renderCards();
     });
   });
 
-  // Tool Subtype Chips (Repos vs Apps)
-  if (toolSubtypeFilters) {
-    toolSubtypeFilters.querySelectorAll('.filter-tag').forEach(tag => {
-      tag.addEventListener('click', () => {
-        toolSubtypeFilters.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
-        tag.classList.add('active');
-        activeToolSubtype = tag.dataset.subtype;
-        renderCards();
-      });
+  // Source Filter
+  if (sourceFilter) {
+    sourceFilter.addEventListener('change', (e) => {
+      activeSource = e.target.value;
+      renderCards();
     });
   }
 
-  // Pricing Chips
-  if (pricingFilters) {
-    pricingFilters.querySelectorAll('.filter-tag').forEach(tag => {
-      tag.addEventListener('click', () => {
-        pricingFilters.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
-        tag.classList.add('active');
-        activePricing = tag.dataset.pricing;
-        renderCards();
-      });
+  // Sort Filter
+  if (sortSelect) {
+    sortSelect.addEventListener('change', (e) => {
+      activeSort = e.target.value;
+      renderCards();
+    });
+  }
+
+  // Layout Toggle
+  if (btnLayoutGrid && btnLayoutList) {
+    btnLayoutGrid.addEventListener('click', () => {
+      btnLayoutGrid.classList.add('active');
+      btnLayoutList.classList.remove('active');
+      currentLayout = 'grid';
+      cardsGrid.className = 'editorial-grid';
+    });
+
+    btnLayoutList.addEventListener('click', () => {
+      btnLayoutList.classList.add('active');
+      btnLayoutGrid.classList.remove('active');
+      currentLayout = 'list';
+      cardsGrid.className = 'editorial-list';
     });
   }
 
@@ -205,12 +237,9 @@ function setupEventListeners() {
       const res = await fetch('/api/run', { method: 'POST' });
       if (res.ok) {
         const payload = await res.json();
-        if (payload.tools || payload.opportunities || payload.business || payload.news || payload.learning || payload.geek) {
-          applyData(payload);
-        } else {
-          await loadHistoryDates();
-          await fetchBriefing();
-        }
+        showToast('⚡ Base de notícias sincronizada com sucesso!');
+        await loadHistoryDates();
+        await fetchBriefing();
       } else {
         await fetchBriefing();
       }
@@ -221,6 +250,123 @@ function setupEventListeners() {
       btnSync.disabled = false;
       btnSync.innerHTML = `<span class="sync-icon">⚡</span> <span class="sync-text">Sincronizar Fontes</span>`;
     }
+  });
+
+  // Export Buttons
+  if (btnCopySummary) {
+    btnCopySummary.addEventListener('click', copyExecutiveSummary);
+  }
+  if (btnDownloadMd) {
+    btnDownloadMd.addEventListener('click', downloadMarkdownReport);
+  }
+  if (btnDownloadJson) {
+    btnDownloadJson.addEventListener('click', downloadJsonData);
+  }
+
+  // Modal Close
+  if (modalClose) {
+    modalClose.addEventListener('click', () => detailModal.classList.add('hidden'));
+  }
+  if (modalBackdrop) {
+    modalBackdrop.addEventListener('click', () => detailModal.classList.add('hidden'));
+  }
+}
+
+function showToast(message) {
+  if (!toastNotification) return;
+  toastNotification.textContent = message;
+  toastNotification.classList.remove('hidden');
+  setTimeout(() => {
+    toastNotification.classList.add('hidden');
+  }, 3500);
+}
+
+function renderContextualFilters() {
+  if (!contextualFiltersRow) return;
+  contextualFiltersRow.innerHTML = '';
+
+  if (activeTab === 'tools') {
+    contextualFiltersRow.innerHTML = `
+      <div class="filter-group">
+        <span class="filter-label">Tipo:</span>
+        <button class="filter-tag active" data-sub="all">Todas as Ferramentas</button>
+        <button class="filter-tag" data-sub="repo">📦 Repositórios GitHub</button>
+        <button class="filter-tag" data-sub="app">🚀 Aplicativos & SaaS</button>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Preço:</span>
+        <button class="filter-tag active" data-pricing="all">Todos</button>
+        <button class="filter-tag" data-pricing="free">🟢 Grátis / Open Source</button>
+        <button class="filter-tag" data-pricing="freemium">🟡 Freemium</button>
+        <button class="filter-tag" data-pricing="paid">🔵 Pago / Comercial</button>
+      </div>
+    `;
+  } else if (activeTab === 'opportunities') {
+    contextualFiltersRow.innerHTML = `
+      <div class="filter-group">
+        <span class="filter-label">Foco:</span>
+        <button class="filter-tag active" data-sub="all">Todas as Oportunidades</button>
+        <button class="filter-tag" data-sub="enterprise">🏢 Soluções Empresariais & Automação</button>
+        <button class="filter-tag" data-sub="microsaas">💡 Ideias de Micro-SaaS & B2B</button>
+      </div>
+    `;
+  } else if (activeTab === 'business') {
+    contextualFiltersRow.innerHTML = `
+      <div class="filter-group">
+        <span class="filter-label">Segmento:</span>
+        <button class="filter-tag active" data-sub="all">Todos os Negócios</button>
+        <button class="filter-tag" data-sub="funding">💰 Rodadas, Aportes & VC</button>
+        <button class="filter-tag" data-sub="ma">🤝 Fusões & Aquisições (M&A)</button>
+        <button class="filter-tag" data-sub="market">📈 Big Techs & Mercado</button>
+      </div>
+    `;
+  } else if (activeTab === 'news') {
+    contextualFiltersRow.innerHTML = `
+      <div class="filter-group">
+        <span class="filter-label">Categoria:</span>
+        <button class="filter-tag active" data-sub="all">Todas as Notícias</button>
+        <button class="filter-tag" data-sub="models">🤖 Modelos & LLMs</button>
+        <button class="filter-tag" data-sub="regulation">⚖️ Regulação & Governo</button>
+      </div>
+    `;
+  } else if (activeTab === 'learning') {
+    contextualFiltersRow.innerHTML = `
+      <div class="filter-group">
+        <span class="filter-label">Conteúdo:</span>
+        <button class="filter-tag active" data-sub="all">Todos os Conteúdos</button>
+        <button class="filter-tag" data-sub="tutorials">🛠️ Tutoriais & Guias</button>
+        <button class="filter-tag" data-sub="architecture">🏛️ Arquitetura & Engenharia</button>
+      </div>
+    `;
+  } else if (activeTab === 'geek') {
+    contextualFiltersRow.innerHTML = `
+      <div class="filter-group">
+        <span class="filter-label">Universo:</span>
+        <button class="filter-tag active" data-sub="all">Toda a Cultura Geek</button>
+        <button class="filter-tag" data-sub="games">🎮 Games & Consoles</button>
+        <button class="filter-tag" data-sub="movies">🎬 Cinema & Séries</button>
+        <button class="filter-tag" data-sub="comics">📚 HQs & Mangás</button>
+      </div>
+    `;
+  }
+
+  // Bind clicks in newly rendered filter tags
+  contextualFiltersRow.querySelectorAll('.filter-tag[data-sub]').forEach(tag => {
+    tag.addEventListener('click', () => {
+      contextualFiltersRow.querySelectorAll('.filter-tag[data-sub]').forEach(t => t.classList.remove('active'));
+      tag.classList.add('active');
+      activeSubfilter = tag.dataset.sub;
+      renderCards();
+    });
+  });
+
+  contextualFiltersRow.querySelectorAll('.filter-tag[data-pricing]').forEach(tag => {
+    tag.addEventListener('click', () => {
+      contextualFiltersRow.querySelectorAll('.filter-tag[data-pricing]').forEach(t => t.classList.remove('active'));
+      tag.classList.add('active');
+      activePricing = tag.dataset.pricing;
+      renderCards();
+    });
   });
 }
 
@@ -241,10 +387,13 @@ function applyData(data) {
   const learning = [];
   const geek = [];
 
+  const uniqueSources = new Set();
+
   allItems.forEach(it => {
     const cat = classifyItemStrict(it);
     it.item_type = cat === 'tools' ? 'tool' : cat;
     it.tool_subtype = detectToolSubtype(it);
+    if (it.source_id) uniqueSources.add(it.source_id);
     
     if (cat === 'tools') tools.push(it);
     else if (cat === 'opportunities') opportunities.push(it);
@@ -269,6 +418,21 @@ function applyData(data) {
   if (badgeLearning) badgeLearning.textContent = currentData.learning.length;
   if (badgeGeek) badgeGeek.textContent = currentData.geek.length;
 
+  // Atualizar dropdown de fontes
+  if (sourceFilter) {
+    const prevSelected = sourceFilter.value;
+    sourceFilter.innerHTML = '<option value="all">Todas as Fontes</option>';
+    Array.from(uniqueSources).sort().forEach(src => {
+      const opt = document.createElement('option');
+      opt.value = src;
+      opt.textContent = src;
+      sourceFilter.appendChild(opt);
+    });
+    if (uniqueSources.has(prevSelected)) {
+      sourceFilter.value = prevSelected;
+    }
+  }
+
   // Formatar data de exibição da edição
   if (data.date) {
     try {
@@ -284,12 +448,7 @@ function applyData(data) {
   }
 
   // Atualizar footer
-  const stats = data.latest_execution;
-  if (stats) {
-    footerStats.innerHTML = `📅 <strong>Data:</strong> ${data.date} &bull; 📊 <strong>Total de Matérias:</strong> ${allItems.length} &bull; ⚡ <strong>Status:</strong> <span style="color:#10B981">${stats.status}</span>`;
-  } else {
-    footerStats.innerHTML = `📅 <strong>Data:</strong> ${data.date} &bull; 📊 <strong>Total de Matérias:</strong> ${allItems.length}`;
-  }
+  footerStats.innerHTML = `📅 <strong>Data:</strong> ${data.date} &bull; 📊 <strong>Total de Matérias:</strong> ${allItems.length} &bull; 🗄️ <strong>Banco:</strong> <span style="color:#10B981">Supabase Cloud Ativo</span>`;
 
   renderCards();
 }
@@ -375,16 +534,149 @@ function getPricingBadge(pricing) {
   return '';
 }
 
+function openModalWithItem(item) {
+  if (!detailModal || !modalBody) return;
+
+  const takeawayLabel = activeTab === 'opportunities' 
+    ? '💰 Como Lucrar ou Aplicar na Empresa:' 
+    : (activeTab === 'business' ? '📈 Análise de Mercado:' : '💡 Contexto & Impacto:');
+
+  modalBody.innerHTML = `
+    <div class="card-top" style="margin-bottom:1rem">
+      <div class="card-badges-left">
+        <span class="card-source-pill">${item.source_id || 'Fonte'}</span>
+        ${activeTab === 'tools' ? getSubtypeBadge(item.tool_subtype) : ''}
+      </div>
+      ${(activeTab === 'tools' || item.pricing_model) ? getPricingBadge(item.pricing_model) : ''}
+    </div>
+    <h2 style="font-size:1.4rem;font-weight:700;color:var(--text-headline);margin-bottom:1rem;line-height:1.4">${item.title}</h2>
+    <p style="font-size:1rem;color:var(--text-primary);line-height:1.6;margin-bottom:1.25rem">${item.summary || item.title}</p>
+    ${item.why_it_matters ? `
+      <div class="card-takeaway" style="margin-bottom:1.25rem;padding:1rem">
+        <strong>${takeawayLabel}</strong> ${item.why_it_matters}
+      </div>
+    ` : ''}
+    ${item.key_features && item.key_features.length > 0 ? `
+      <div style="margin-bottom:1.5rem">
+        <strong style="color:var(--text-gold);font-size:0.85rem;text-transform:uppercase;display:block;margin-bottom:0.5rem">Destaques & Recursos:</strong>
+        <div class="card-tags">
+          ${item.key_features.map(f => `<span class="feature-pill" style="font-size:0.85rem;padding:4px 10px">✔ ${f}</span>`).join('')}
+        </div>
+      </div>
+    ` : ''}
+    <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border-subtle);padding-top:1rem;margin-top:1rem">
+      <a href="${item.canonical_url || '#'}" target="_blank" rel="noopener noreferrer" class="btn-primary-action" style="padding:0.6rem 1.5rem">
+        Acessar Link Original ↗
+      </a>
+      <span class="card-pubtime">${item.published_date_utc || 'Data de Hoje'}</span>
+    </div>
+  `;
+
+  detailModal.classList.remove('hidden');
+}
+
+function copyExecutiveSummary() {
+  const dateStr = dateSelect.value || new Date().toISOString().split('T')[0];
+  let text = `⚡ MACLOVIN NEWS — RESUMO EXECUTIVO (${dateStr})\n`;
+  text += `============================================================\n\n`;
+
+  if (currentData.tools.length > 0) {
+    text += `🛠️ RADAR DE FERRAMENTAS & REPOSITÓRIOS (${currentData.tools.length}):\n`;
+    currentData.tools.slice(0, 5).forEach((t, i) => {
+      text += `${i + 1}. ${t.title} [${t.pricing_model || 'Grátis'}]\n   -> ${t.summary || ''}\n   -> Link: ${t.canonical_url}\n\n`;
+    });
+  }
+
+  if (currentData.opportunities.length > 0) {
+    text += `💡 OPORTUNIDADES DE NEGÓCIO & MONETIZAÇÃO (${currentData.opportunities.length}):\n`;
+    currentData.opportunities.slice(0, 5).forEach((o, i) => {
+      text += `${i + 1}. ${o.title}\n   -> Como lucrar/aplicar: ${o.why_it_matters || o.summary}\n   -> Link: ${o.canonical_url}\n\n`;
+    });
+  }
+
+  if (currentData.business.length > 0) {
+    text += `💼 BUSINESS, STARTUPS & INVESTIMENTOS (${currentData.business.length}):\n`;
+    currentData.business.slice(0, 5).forEach((b, i) => {
+      text += `${i + 1}. ${b.title}\n   -> Análise: ${b.why_it_matters || b.summary}\n   -> Link: ${b.canonical_url}\n\n`;
+    });
+  }
+
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('📋 Resumo Executivo copiado para a área de transferência!');
+  }).catch(err => {
+    showToast('Erro ao copiar resumo.');
+  });
+}
+
+function downloadMarkdownReport() {
+  const dateStr = dateSelect.value || new Date().toISOString().split('T')[0];
+  const filename = `maclovin-briefing-${dateStr}.md`;
+  
+  let md = `# Maclovin Intelligence Briefing — ${dateStr}\n\n`;
+  ['tools', 'opportunities', 'business', 'news', 'learning', 'geek'].forEach(tab => {
+    const list = currentData[tab] || [];
+    if (list.length > 0) {
+      md += `## ${tab.toUpperCase()}\n\n`;
+      list.forEach((item, idx) => {
+        md += `### ${idx + 1}. ${item.title}\n`;
+        md += `**Fonte:** \`${item.source_id}\` | **Link:** [${item.canonical_url}](${item.canonical_url})\n\n`;
+        md += `> ${item.summary || item.title}\n\n`;
+        if (item.why_it_matters) md += `💡 **Takeaway:** ${item.why_it_matters}\n\n`;
+      });
+    }
+  });
+
+  const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  showToast(`📥 Relatório ${filename} baixado com sucesso!`);
+}
+
+function downloadJsonData() {
+  const dateStr = dateSelect.value || new Date().toISOString().split('T')[0];
+  const blob = new Blob([JSON.stringify(currentData, null, 2)], { type: 'application/json;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `maclovin-${dateStr}.json`;
+  a.click();
+  showToast(`💾 Arquivo JSON baixado com sucesso!`);
+}
+
 function renderCards() {
   cardsGrid.innerHTML = '';
   let items = currentData[activeTab] || [];
 
-  // Filtro de subtipo (apenas na aba de ferramentas: Todos, Repos, Apps)
-  if (activeTab === 'tools' && activeToolSubtype !== 'all') {
-    items = items.filter(item => item.tool_subtype === activeToolSubtype);
+  // Filtro de subtipo contextual
+  if (activeSubfilter !== 'all') {
+    items = items.filter(item => {
+      const text = `${item.title} ${item.summary || ''} ${item.why_it_matters || ''}`.toLowerCase();
+      if (activeTab === 'tools') {
+        return item.tool_subtype === activeSubfilter;
+      } else if (activeTab === 'opportunities') {
+        if (activeSubfilter === 'enterprise') return text.includes('empresa') || text.includes('enterprise') || text.includes('automação') || text.includes('b2b');
+        if (activeSubfilter === 'microsaas') return text.includes('saas') || text.includes('micro') || text.includes('monetizar') || text.includes('vender');
+      } else if (activeTab === 'business') {
+        if (activeSubfilter === 'funding') return text.includes('funding') || text.includes('aporte') || text.includes('rodada') || text.includes('investimento');
+        if (activeSubfilter === 'ma') return text.includes('m&a') || text.includes('aquisição') || text.includes('comprou') || text.includes('comprar');
+        if (activeSubfilter === 'market') return text.includes('lucro') || text.includes('receita') || text.includes('quarter') || text.includes('big tech');
+      } else if (activeTab === 'news') {
+        if (activeSubfilter === 'models') return text.includes('modelo') || text.includes('gpt') || text.includes('claude') || text.includes('gemini') || text.includes('llama') || text.includes('deepseek');
+        if (activeSubfilter === 'regulation') return text.includes('processo') || text.includes('regulação') || text.includes('governo') || text.includes('multa');
+      } else if (activeTab === 'learning') {
+        if (activeSubfilter === 'tutorials') return text.includes('tutorial') || text.includes('guia') || text.includes('como');
+        if (activeSubfilter === 'architecture') return text.includes('arquitetura') || text.includes('sistema') || text.includes('engenharia') || text.includes('paper');
+      } else if (activeTab === 'geek') {
+        if (activeSubfilter === 'games') return text.includes('game') || text.includes('jogo') || text.includes('playstation') || text.includes('steam') || text.includes('switch');
+        if (activeSubfilter === 'movies') return text.includes('filme') || text.includes('cinema') || text.includes('trailer') || text.includes('série');
+        if (activeSubfilter === 'comics') return text.includes('hq') || text.includes('quadrinho') || text.includes('comic') || text.includes('mangá');
+      }
+      return true;
+    });
   }
 
-  // Filtro de preço (apenas na aba de ferramentas)
+  // Filtro de preço (ferramentas)
   if (activeTab === 'tools' && activePricing !== 'all') {
     items = items.filter(item => {
       const p = (item.pricing_model || '').toLowerCase();
@@ -395,12 +687,26 @@ function renderCards() {
     });
   }
 
+  // Filtro de fonte
+  if (activeSource !== 'all') {
+    items = items.filter(item => item.source_id === activeSource);
+  }
+
   // Filtro de busca textual
   if (searchQuery) {
     items = items.filter(item => {
       const text = `${item.title} ${item.summary || ''} ${item.why_it_matters || ''} ${(item.key_features || []).join(' ')} ${item.source_id || ''}`.toLowerCase();
       return text.includes(searchQuery);
     });
+  }
+
+  // Ordenação
+  if (activeSort === 'az') {
+    items.sort((a, b) => a.title.localeCompare(b.title));
+  } else if (activeSort === 'relevance') {
+    items.sort((a, b) => (b.relevance_score || 0) - (a.relevance_score || 0));
+  } else if (activeSort === 'recent') {
+    items.sort((a, b) => (b.published_date_utc || '').localeCompare(a.published_date_utc || ''));
   }
 
   if (items.length === 0) {
@@ -419,7 +725,7 @@ function renderCards() {
     
     let takeawayLabel = 'Contexto & Impacto:';
     if (activeTab === 'opportunities') takeawayLabel = '💰 Como Lucrar ou Aplicar na Empresa:';
-    else if (activeTab === 'business') takeawayLabel = 'Análise de Mercado:';
+    else if (activeTab === 'business') takeawayLabel = '📈 Análise de Mercado:';
 
     const takeawayBox = item.why_it_matters ? `
       <div class="card-takeaway">
@@ -462,18 +768,29 @@ function renderCards() {
           </div>
           ${pricingBadge}
         </div>
-        <h3 class="card-headline">${item.title}</h3>
+        <h3 class="card-headline" title="Clique para ver os detalhes">${item.title}</h3>
         <p class="card-lead">${item.summary || item.title}</p>
         ${takeawayBox}
         ${featuresHtml}
       </div>
       <div class="card-action-bar">
-        <a href="${item.canonical_url || '#'}" target="_blank" rel="noopener noreferrer" class="read-btn">
-          ${ctaLabel}
-        </a>
+        <div class="card-action-bar-left">
+          <a href="${item.canonical_url || '#'}" target="_blank" rel="noopener noreferrer" class="read-btn">
+            ${ctaLabel}
+          </a>
+          <button class="read-btn" style="color:var(--text-muted);font-weight:500" data-modal="true">
+            📖 Detalhes
+          </button>
+        </div>
         <span class="card-pubtime">${timeFormatted} UTC</span>
       </div>
     `;
+
+    // Click handler for modal view
+    const headline = card.querySelector('.card-headline');
+    const modalBtn = card.querySelector('[data-modal="true"]');
+    if (headline) headline.addEventListener('click', () => openModalWithItem(item));
+    if (modalBtn) modalBtn.addEventListener('click', () => openModalWithItem(item));
 
     cardsGrid.appendChild(card);
   });

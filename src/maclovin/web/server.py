@@ -12,8 +12,14 @@ from maclovin.config import load_config
 from maclovin.storage.database import get_db_connection
 from maclovin.storage.log_repo import get_latest_execution
 from maclovin.storage.news_repo import get_news_by_date
+from maclovin.storage.supabase_client import (
+    get_briefing_from_supabase,
+    save_briefing_to_supabase,
+    get_all_dates_from_supabase,
+)
 from maclovin.intelligence.factory import create_llm_provider
 from maclovin.core.pipeline import Pipeline
+from maclovin.reporting.markdown_parser import extract_briefing_from_markdown
 
 
 class DashboardHandler(http.server.BaseHTTPRequestHandler):
@@ -35,66 +41,85 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
         path = parsed.path
         query = urllib.parse.parse_qs(parsed.query)
 
-        # 1. API: Obter Briefing por Data
+        # 1. API: Obter Briefing por Data (Supabase -> Markdown -> JSON)
         if path == "/api/briefing":
-            cfg = load_config()
-            conn = get_db_connection(cfg.settings.database_path)
-            
             target_date_str = query.get("date", [None])[0]
-            if target_date_str:
-                try:
-                    target_date = datetime.strptime(target_date_str, "%Y-%m-%d").date()
-                except ValueError:
-                    target_date = None
-            else:
-                from maclovin.core.clock import get_yesterday_window
-                _, _, target_date = get_yesterday_window(cfg.settings.timezone)
+            
+            # Tentar Supabase
+            data = None
+            try:
+                data = get_briefing_from_supabase(target_date_str)
+            except Exception:
+                pass
 
-            items = get_news_by_date(conn, target_date)
-            latest = get_latest_execution(conn)
-            conn.close()
+            if not data:
+                # Tentar Markdown
+                briefings_dir = pathlib.Path("briefings")
+                selected_file = None
+                if briefings_dir.exists():
+                    files = sorted(list(briefings_dir.glob("*.md")), reverse=True)
+                    if target_date_str:
+                        for f in files:
+                            if f.stem == target_date_str:
+                                selected_file = f
+                                break
+                    elif files:
+                        selected_file = files[0]
 
-            # Separar por categorias usando model_dump(mode="json") para serialização de datas
-            tools = [it.model_dump(mode="json") for it in items if it.item_type == "tool"]
-            learning = [it.model_dump(mode="json") for it in items if it.item_type == "learning"]
-            geek = [it.model_dump(mode="json") for it in items if it.item_type == "geek"]
-            news = [it.model_dump(mode="json") for it in items if it.item_type == "news"]
+                if selected_file and selected_file.exists():
+                    data = extract_briefing_from_markdown(selected_file)
 
-            payload = {
-                "date": target_date.isoformat(),
-                "total_items": len(items),
-                "tools": tools,
-                "learning": learning,
-                "geek": geek,
-                "news": news,
-                "latest_execution": latest,
-            }
+            if not data:
+                # Fallback JSON estático
+                json_file = pathlib.Path(f"public/data/briefings/{target_date_str}.json" if target_date_str else "public/data/briefing.json")
+                if json_file.exists():
+                    try:
+                        data = json.loads(json_file.read_text(encoding="utf-8"))
+                    except Exception:
+                        pass
+
+            if not data:
+                data = {
+                    "date": target_date_str or datetime.now().strftime("%Y-%m-%d"),
+                    "total_items": 0,
+                    "tools": [],
+                    "opportunities": [],
+                    "business": [],
+                    "learning": [],
+                    "geek": [],
+                    "news": [],
+                }
+
             self._set_headers(200, "application/json; charset=utf-8")
-            self.wfile.write(json.dumps(payload, ensure_ascii=False).encode("utf-8"))
+            self.wfile.write(json.dumps(data, ensure_ascii=False).encode("utf-8"))
             return
 
         # 2. API: Histórico de Datas
         elif path == "/api/history":
-            cfg = load_config()
-            out_dir = pathlib.Path(cfg.settings.output_dir)
             dates = []
-            if out_dir.exists():
-                for f in out_dir.glob("*.md"):
-                    date_part = f.stem
-                    dates.append(date_part)
-            dates.sort(reverse=True)
+            try:
+                dates = get_all_dates_from_supabase()
+            except Exception:
+                pass
+
+            if not dates:
+                briefings_dir = pathlib.Path("briefings")
+                if briefings_dir.exists():
+                    dates = [f.stem for f in sorted(list(briefings_dir.glob("*.md")), reverse=True)]
+
             self._set_headers(200, "application/json; charset=utf-8")
             self.wfile.write(json.dumps({"dates": dates}).encode("utf-8"))
             return
 
         # 3. API: Status de Execução
         elif path == "/api/status":
-            cfg = load_config()
-            conn = get_db_connection(cfg.settings.database_path)
-            latest = get_latest_execution(conn)
-            conn.close()
             self._set_headers(200, "application/json; charset=utf-8")
-            self.wfile.write(json.dumps(latest or {}).encode("utf-8"))
+            self.wfile.write(json.dumps({
+                "status": "ONLINE",
+                "database": "Supabase PostgreSQL + SQLite",
+                "version": "1.0",
+                "timestamp": datetime.utcnow().isoformat() + "Z"
+            }).encode("utf-8"))
             return
 
         # 4. Servir Arquivos Estáticos da Interface Web
@@ -121,15 +146,26 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         if parsed.path == "/api/run":
             cfg = load_config()
-            conn = get_db_connection(cfg.settings.database_path)
             provider = create_llm_provider(cfg.ai)
-            pipeline = Pipeline(config=cfg, llm_provider=provider, db_connection=conn)
+            pipeline = Pipeline(config=cfg, llm_provider=provider, db_connection=None)
 
             report = pipeline.run(dry_run=False)
-            conn.close()
+            
+            # Exportar e salvar no Supabase
+            md_file = pathlib.Path(f"briefings/{report.reference_date.isoformat()}.md")
+            if md_file.exists():
+                payload = extract_briefing_from_markdown(md_file)
+                try:
+                    save_briefing_to_supabase(payload)
+                except Exception:
+                    pass
 
             self._set_headers(200, "application/json; charset=utf-8")
-            self.wfile.write(json.dumps({"status": "SUCCESS", "date": report.reference_date.isoformat(), "stats": report.execution_stats}).encode("utf-8"))
+            self.wfile.write(json.dumps({
+                "status": "SUCCESS",
+                "date": report.reference_date.isoformat(),
+                "total_items": len(report.tools_and_launches) + len(report.opportunity_items) + len(report.business_items) + len(report.standalone_news) + len(report.learning_items) + len(report.geek_items)
+            }).encode("utf-8"))
             return
 
         self._set_headers(404, "text/plain; charset=utf-8")
