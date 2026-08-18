@@ -3,100 +3,126 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Maclovin — Daily Intelligence Platform</title>
+  <title>MACLOVIN NEWS — Inteligência Diária & Radar Tech</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <div class="app-layout">
-    <!-- Header -->
-    <header class="app-header">
-      <div class="brand-container">
-        <div class="brand-logo">🕶️</div>
-        <div>
-          <h1 class="brand-title">Maclovin Intelligence</h1>
-          <p class="brand-subtitle">Radar de Ferramentas, Notícias de IA & Universo Geek</p>
+  <div class="site-container">
+    <!-- Top News Ticker / Masthead Topbar -->
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <span class="live-indicator">
+          <span class="pulse-dot"></span> AO VIVO
+        </span>
+        <span class="edition-label" id="currentDateDisplay">Edição Diária • Curadoria Automatizada</span>
+      </div>
+      <div class="top-bar-right">
+        <span class="coverage-tag">Cobertura: IA • Ferramentas • Engenharia • Geek</span>
+      </div>
+    </div>
+
+    <!-- Editorial Masthead Header -->
+    <header class="masthead">
+      <div class="masthead-brand">
+        <div class="brand-row">
+          <span class="brand-icon">⚡</span>
+          <h1 class="brand-title">MACLOVIN NEWS</h1>
         </div>
+        <p class="brand-tagline">O radar diário de ferramentas, inteligência artificial, engenharia e universo geek</p>
       </div>
 
-      <div class="header-actions">
-        <div class="date-picker-wrapper">
-          <label for="dateSelect" class="date-label">📅 Data:</label>
-          <select id="dateSelect" class="date-select"></select>
+      <div class="masthead-controls">
+        <div class="control-group">
+          <label for="dateSelect" class="control-label">Edição:</label>
+          <div class="select-wrapper">
+            <select id="dateSelect" class="date-select"></select>
+          </div>
         </div>
-        <button id="btnSync" class="btn-sync" title="Disparar nova coleta e resumo agora">
-          <span class="sync-icon">⚡</span> Sincronizar Agora
+        <button id="btnSync" class="btn-primary-action" title="Executar varredura completa das fontes agora">
+          <span class="sync-icon">⚡</span>
+          <span class="sync-text">Sincronizar Fontes</span>
         </button>
       </div>
     </header>
 
-    <!-- Navigation Tabs -->
-    <nav class="category-nav">
-      <button class="nav-tab active" data-tab="tools">
-        <span class="tab-icon">🛠️</span>
-        <span class="tab-title">Radar de Ferramentas</span>
-        <span class="tab-badge" id="badgeTools">0</span>
+    <!-- Navigation Hub (Sections) -->
+    <nav class="news-nav" aria-label="Seções de Notícias">
+      <button class="nav-btn active" data-tab="tools">
+        <span class="nav-icon">🛠️</span>
+        <span class="nav-label">Radar de Ferramentas</span>
+        <span class="nav-counter" id="badgeTools">0</span>
       </button>
-      <button class="nav-tab" data-tab="news">
-        <span class="tab-icon">📰</span>
-        <span class="tab-title">Notícias & Mercado de IA</span>
-        <span class="tab-badge" id="badgeNews">0</span>
+      <button class="nav-btn" data-tab="news">
+        <span class="nav-icon">📰</span>
+        <span class="nav-label">Notícias & Mercado de IA</span>
+        <span class="nav-counter" id="badgeNews">0</span>
       </button>
-      <button class="nav-tab" data-tab="learning">
-        <span class="tab-icon">📚</span>
-        <span class="tab-title">Aprender Tecnologia</span>
-        <span class="tab-badge" id="badgeLearning">0</span>
+      <button class="nav-btn" data-tab="learning">
+        <span class="nav-icon">📚</span>
+        <span class="nav-label">Aprender & Deep Dives</span>
+        <span class="nav-counter" id="badgeLearning">0</span>
       </button>
-      <button class="nav-tab" data-tab="geek">
-        <span class="tab-icon">🎮</span>
-        <span class="tab-title">Universo Geek & Nerd</span>
-        <span class="tab-badge" id="badgeGeek">0</span>
+      <button class="nav-btn" data-tab="geek">
+        <span class="nav-icon">🎮</span>
+        <span class="nav-label">Universo Geek & Games</span>
+        <span class="nav-counter" id="badgeGeek">0</span>
       </button>
     </nav>
 
-    <!-- Filter & Search Toolbar -->
-    <div class="toolbar">
-      <div class="search-box">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="searchInput" placeholder="Buscar por palavra-chave, ferramenta, tema...">
+    <!-- Filter & Search Command Bar -->
+    <section class="command-bar">
+      <div class="search-container">
+        <span class="search-glyph">🔍</span>
+        <input type="text" id="searchInput" class="search-field" placeholder="Buscar por software, tema, empresa, jogo ou palavra-chave...">
+        <button id="clearSearch" class="clear-btn hidden" title="Limpar busca">&times;</button>
       </div>
 
-      <div class="pricing-filters" id="pricingFilters">
-        <button class="filter-chip active" data-pricing="all">Todos os Preços</button>
-        <button class="filter-chip" data-pricing="free">🟢 Grátis / Open-Source</button>
-        <button class="filter-chip" data-pricing="freemium">🟡 Freemium</button>
-        <button class="filter-chip" data-pricing="paid">🔵 Pago / Comercial</button>
+      <div class="filter-group" id="pricingFilters">
+        <span class="filter-label">Preço:</span>
+        <button class="filter-tag active" data-pricing="all">Todos</button>
+        <button class="filter-tag" data-pricing="free">🟢 Grátis / Open Source</button>
+        <button class="filter-tag" data-pricing="freemium">🟡 Freemium</button>
+        <button class="filter-tag" data-pricing="paid">🔵 Comercial / Pago</button>
       </div>
-    </div>
+    </section>
 
-    <!-- Main Content Container -->
-    <main class="content-area">
+    <!-- Main Editorial Feed Area -->
+    <main class="feed-main">
       <!-- Loading State -->
-      <div id="loadingState" class="state-container hidden">
-        <div class="spinner"></div>
-        <p>Carregando inteligência diária...</p>
+      <div id="loadingState" class="editorial-state hidden">
+        <div class="editorial-spinner"></div>
+        <h3 class="state-title">Carregando a edição de notícias...</h3>
+        <p class="state-desc">Processando feeds e extraindo pontos-chave.</p>
       </div>
 
       <!-- Empty State -->
-      <div id="emptyState" class="state-container hidden">
-        <div class="empty-icon">📭</div>
-        <h3>Nenhum item encontrado nesta categoria</h3>
-        <p>Tente ajustar os filtros ou clique em "Sincronizar Agora" para executar a coleta.</p>
+      <div id="emptyState" class="editorial-state hidden">
+        <div class="state-glyph">🗞️</div>
+        <h3 class="state-title">Nenhuma matéria encontrada nesta seção</h3>
+        <p class="state-desc">Tente alterar os termos de busca ou clique em <strong>Sincronizar Fontes</strong> para atualizar a base.</p>
       </div>
 
       <!-- Cards Grid -->
-      <div id="cardsGrid" class="cards-grid"></div>
+      <div id="cardsGrid" class="editorial-grid"></div>
     </main>
 
-    <!-- Footer Stats -->
-    <footer class="app-footer">
-      <div class="footer-stats" id="footerStats">
-        <span>Carregando estatísticas...</span>
+    <!-- Newspaper Style Footer -->
+    <footer class="newspaper-footer">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <span class="footer-logo">⚡ MACLOVIN NEWS</span>
+          <p class="footer-copy">Plataforma independente de curadoria e inteligência técnica.</p>
+        </div>
+        <div class="footer-meta" id="footerStats">
+          <span>Carregando estatísticas da edição...</span>
+        </div>
       </div>
-      <div class="footer-credits">
-        Maclovin Intelligence Platform &bull; 100% Local & Privado
+      <div class="footer-bottom">
+        <span>© 2026 Maclovin News • Processamento 100% Local & Privado</span>
+        <span>Feeds verificados: TechCrunch • The Verge • Hugging Face • O Vício • Legião dos Heróis • IGN • Dev.to</span>
       </div>
     </footer>
   </div>

@@ -4,6 +4,7 @@ import pathlib
 import re
 from datetime import datetime, timezone
 from maclovin.intelligence.translator import translate_to_pt_br
+from maclovin.ingestion.category_classifier import classify_category
 
 
 def extract_briefing_from_markdown(file_path: pathlib.Path) -> dict:
@@ -70,8 +71,11 @@ def extract_briefing_from_markdown(file_path: pathlib.Path) -> dict:
             translated_summary = translate_to_pt_br(summary or title)
             translated_why = translate_to_pt_br(why) if why else "Acompanhamento relevante para inovação e desenvolvimento."
 
+            # Determinar a categoria real do item usando o classificador estrito
+            real_cat = classify_category(translated_title, translated_summary, current_section)
+
             item = {
-                "id": f"{current_section}-{len(tools)+len(news)+len(learning)+len(geek)+1}",
+                "id": f"{real_cat}-{len(tools)+len(news)+len(learning)+len(geek)+1}",
                 "source_id": source_id,
                 "title": translated_title,
                 "canonical_url": url,
@@ -79,17 +83,17 @@ def extract_briefing_from_markdown(file_path: pathlib.Path) -> dict:
                 "summary": translated_summary,
                 "why_it_matters": translated_why,
                 "pricing_model": pricing,
-                "item_type": "tool" if current_section == "tools" else ("learning" if current_section == "learning" else ("geek" if current_section == "geek" else "news")),
+                "item_type": "tool" if real_cat == "tools" else real_cat,
                 "key_features": [translate_to_pt_br(f) for f in features],
             }
 
-            if current_section == "tools":
+            if real_cat == "tools":
                 tools.append(item)
-            elif current_section == "learning":
+            elif real_cat == "learning":
                 learning.append(item)
-            elif current_section == "geek":
+            elif real_cat == "geek":
                 geek.append(item)
-            elif current_section == "news":
+            else:
                 news.append(item)
 
         i += 1

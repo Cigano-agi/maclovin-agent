@@ -3,6 +3,7 @@ import urllib.parse
 from maclovin.config import load_config
 from maclovin.core.pipeline import Pipeline
 from maclovin.intelligence.factory import create_llm_provider
+from maclovin.ingestion.category_classifier import classify_category
 
 
 def app(environ, start_response):
@@ -31,18 +32,37 @@ def app(environ, start_response):
         learning = [it.model_dump(mode="json") for it in report.learning_items]
         geek = [it.model_dump(mode="json") for it in report.geek_items]
 
+        # Garantir re-classificação estrita
+        all_items = tools + news + learning + geek
+        final_tools = []
+        final_news = []
+        final_learning = []
+        final_geek = []
+
+        for item in all_items:
+            cat = classify_category(item.get("title", ""), item.get("summary", ""), item.get("item_type", "news"))
+            item["item_type"] = "tool" if cat == "tools" else cat
+            if cat == "tools":
+                final_tools.append(item)
+            elif cat == "learning":
+                final_learning.append(item)
+            elif cat == "geek":
+                final_geek.append(item)
+            else:
+                final_news.append(item)
+
         payload = {
             "status": "SUCCESS",
             "date": report.reference_date.isoformat(),
-            "total_items": len(tools) + len(news) + len(learning) + len(geek),
-            "tools": tools,
-            "news": news,
-            "learning": learning,
-            "geek": geek,
+            "total_items": len(final_tools) + len(final_news) + len(final_learning) + len(final_geek),
+            "tools": final_tools,
+            "news": final_news,
+            "learning": final_learning,
+            "geek": final_geek,
             "latest_execution": {
                 "reference_date": report.reference_date.isoformat(),
                 "status": "SUCCESS",
-                "items_collected_count": len(tools) + len(news) + len(learning) + len(geek),
+                "items_collected_count": len(final_tools) + len(final_news) + len(final_learning) + len(final_geek),
             },
         }
 

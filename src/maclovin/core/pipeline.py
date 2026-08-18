@@ -13,6 +13,7 @@ from maclovin.models import (
 )
 from maclovin.core.clock import get_yesterday_window
 from maclovin.ingestion import feed_reader
+from maclovin.ingestion.category_classifier import refine_item_category, classify_category
 from maclovin.reporting.markdown_builder import save_markdown_report
 from maclovin.reporting.console_printer import print_console_summary
 
@@ -67,10 +68,9 @@ class Pipeline:
                 alerts.extend(errors)
             else:
                 sources_ok += 1
-                cat = source_category_map.get(source.id, "news")
+                default_cat = source_category_map.get(source.id, "news")
                 for item in items:
-                    if cat in ("tools", "learning", "geek"):
-                        item.item_type = "tool" if cat == "tools" else cat
+                    refine_item_category(item, default_cat)
                     raw_items.append(item)
 
         # 3. Desduplicação determinística preliminar
@@ -98,15 +98,12 @@ class Pipeline:
                 summarized_items = summarize_all(refined_items, "Tecnologia & Inovação", self.llm_provider)
 
                 for it in summarized_items:
-                    cat = source_category_map.get(it.source_id, "news")
-                    if it.item_type == "tool" or cat == "tools":
-                        it.item_type = "tool"
+                    refine_item_category(it, source_category_map.get(it.source_id, "news"))
+                    if it.item_type == "tool":
                         tools_list.append(it)
-                    elif it.item_type == "learning" or cat == "learning" or "tech-learning" in it.topic_ids:
-                        it.item_type = "learning"
+                    elif it.item_type == "learning":
                         learning_list.append(it)
-                    elif it.item_type == "geek" or cat == "geek" or "geek-culture" in it.topic_ids:
-                        it.item_type = "geek"
+                    elif it.item_type == "geek":
                         geek_list.append(it)
                     else:
                         news_list.append(it)
@@ -116,23 +113,23 @@ class Pipeline:
             except Exception as e:
                 alerts.append(f"Aviso de IA: Falha no processamento: {e}")
                 for it in matched_items:
-                    cat = source_category_map.get(it.source_id, "news")
-                    if cat == "tools" or it.item_type == "tool":
+                    refine_item_category(it, source_category_map.get(it.source_id, "news"))
+                    if it.item_type == "tool":
                         tools_list.append(it)
-                    elif cat == "learning" or "tech-learning" in it.topic_ids:
+                    elif it.item_type == "learning":
                         learning_list.append(it)
-                    elif cat == "geek" or "geek-culture" in it.topic_ids:
+                    elif it.item_type == "geek":
                         geek_list.append(it)
                     else:
                         news_list.append(it)
         else:
             for it in matched_items:
-                cat = source_category_map.get(it.source_id, "news")
-                if cat == "tools" or it.item_type == "tool":
+                refine_item_category(it, source_category_map.get(it.source_id, "news"))
+                if it.item_type == "tool":
                     tools_list.append(it)
-                elif cat == "learning" or "tech-learning" in it.topic_ids:
+                elif it.item_type == "learning":
                     learning_list.append(it)
-                elif cat == "geek" or "geek-culture" in it.topic_ids:
+                elif it.item_type == "geek":
                     geek_list.append(it)
                 else:
                     news_list.append(it)
