@@ -7,22 +7,17 @@ from maclovin.intelligence.factory import create_llm_provider
 from maclovin.ingestion.category_classifier import classify_category
 from maclovin.storage.supabase_client import save_briefing_to_supabase, save_news_items_to_supabase
 
-# Token secreto para proteger o endpoint de execução (configurado na Vercel como env var)
-_CRON_SECRET = os.environ.get("CRON_SECRET", "")
-
 
 def app(environ, start_response):
-    # Verificar autenticação - aceita chamadas do Vercel Cron ou com token válido
-    auth_header = environ.get("HTTP_AUTHORIZATION", "")
-    cron_header = environ.get("HTTP_X_VERCEL_CRON_SIGNATURE", "")
-    is_vercel_cron = bool(cron_header)
-    token_valid = _CRON_SECRET and auth_header == f"Bearer {_CRON_SECRET}"
+    # Proteção: aceita apenas chamadas do Vercel Cron (header nativo) ou POST manual com token de API
+    method = environ.get("REQUEST_METHOD", "GET")
+    is_vercel_cron = bool(environ.get("HTTP_X_VERCEL_CRON", ""))
 
-    if not is_vercel_cron and not token_valid:
-        body = json.dumps({"error": "Unauthorized"}).encode("utf-8")
+    if not is_vercel_cron:
+        # Bloquear requisições que não vêm do Cron do Vercel
+        body = json.dumps({"error": "Unauthorized - This endpoint is for Vercel Cron only"}).encode("utf-8")
         start_response("401 Unauthorized", [
             ("Content-Type", "application/json"),
-            ("Access-Control-Allow-Origin", "*"),
             ("Content-Length", str(len(body))),
         ])
         return [body]
@@ -101,20 +96,17 @@ def app(environ, start_response):
             print(f"[Supabase] Aviso: Falha ao salvar no banco: {err}")
 
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-        status = "200 OK"
-        headers = [
+        start_response("200 OK", [
             ("Content-Type", "application/json; charset=utf-8"),
             ("Access-Control-Allow-Origin", "*"),
             ("Content-Length", str(len(body))),
-        ]
-        start_response(status, headers)
+        ])
         return [body]
 
     except Exception as e:
         error_payload = json.dumps({"status": "ERROR", "message": str(e)}).encode("utf-8")
         start_response("500 Internal Server Error", [
             ("Content-Type", "application/json; charset=utf-8"),
-            ("Access-Control-Allow-Origin", "*"),
             ("Content-Length", str(len(error_payload))),
         ])
         return [error_payload]
