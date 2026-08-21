@@ -69,6 +69,7 @@ class NewsItem(BaseModel):
     key_features: List[str] = Field(default_factory=list)
     summary: Optional[str] = None
     why_it_matters: Optional[str] = None
+    thumbnail_url: Optional[str] = None
 
     @model_validator(mode="after")
     def compute_content_hash_and_id(self) -> "NewsItem":

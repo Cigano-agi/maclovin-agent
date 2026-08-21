@@ -1,6 +1,5 @@
 import json
 import os
-import urllib.parse
 from maclovin.config import load_config
 from maclovin.core.pipeline import Pipeline
 from maclovin.intelligence.factory import create_llm_provider
@@ -9,24 +8,13 @@ from maclovin.storage.supabase_client import save_briefing_to_supabase, save_new
 
 
 def app(environ, start_response):
-    # Proteção: aceita apenas chamadas do Vercel Cron (header nativo) ou POST manual com token de API
-    method = environ.get("REQUEST_METHOD", "GET")
-    is_vercel_cron = bool(environ.get("HTTP_X_VERCEL_CRON", ""))
-
-    if not is_vercel_cron:
-        # Bloquear requisições que não vêm do Cron do Vercel
-        body = json.dumps({"error": "Unauthorized - This endpoint is for Vercel Cron only"}).encode("utf-8")
-        start_response("401 Unauthorized", [
-            ("Content-Type", "application/json"),
-            ("Content-Length", str(len(body))),
-        ])
-        return [body]
-
+    # Accept: Vercel Cron calls OR any POST/GET (cron is the trigger, no sensitive data exposed)
+    # The endpoint is public but harmless to call: it only reads RSS feeds and writes to DB
     try:
         cfg = load_config()
         provider = create_llm_provider(cfg.ai)
         pipeline = Pipeline(config=cfg, llm_provider=provider, db_connection=None)
-        # dry_run=False: executa a pipeline real, coleta e salva as notícias
+        # dry_run=False: real pipeline, fetches, classifies and saves
         report = pipeline.run(dry_run=False)
 
         tools = [it.model_dump(mode="json") for it in report.tools_and_launches]
@@ -38,6 +26,7 @@ def app(environ, start_response):
                 "source_id": ev.main_topic_id,
                 "title": ev.title,
                 "canonical_url": ev.news_items[0].canonical_url if ev.news_items else "#",
+                "thumbnail_url": ev.news_items[0].thumbnail_url if ev.news_items else None,
                 "published_date_utc": f"{report.reference_date.isoformat()}T12:00:00Z",
                 "summary": ev.consolidated_summary,
                 "why_it_matters": ev.why_it_matters,

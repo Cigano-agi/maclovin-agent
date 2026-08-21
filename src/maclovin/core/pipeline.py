@@ -40,9 +40,14 @@ class Pipeline:
         start_time = time.time()
         started_at = datetime.now(timezone.utc)
 
-        # 1. Resolver janela temporal D-1
+        # 1. Resolver janela temporal — últimas 48h para garantir cobertura completa
+        from datetime import timedelta
+        now_utc = datetime.now(timezone.utc)
         if target_date is None:
-            start_utc, end_utc, ref_date = get_yesterday_window(self.config.settings.timezone)
+            # Pega as últimas 48h: do início de ontem até agora
+            _, end_utc_d1, ref_date = get_yesterday_window(self.config.settings.timezone)
+            start_utc = now_utc - timedelta(hours=48)
+            end_utc = now_utc
         else:
             ref_date = target_date
             import zoneinfo

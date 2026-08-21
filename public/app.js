@@ -759,7 +759,12 @@ function renderCards() {
       ctaLabel = 'Explorar oportunidade ↗';
     }
 
+    const thumbHtml = item.thumbnail_url
+      ? `<div class="card-thumb" style="background-image:url('${item.thumbnail_url}')"></div>`
+      : '';
+
     card.innerHTML = `
+      ${thumbHtml}
       <div>
         <div class="card-top">
           <div class="card-badges-left">

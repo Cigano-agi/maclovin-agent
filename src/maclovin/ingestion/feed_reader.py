@@ -68,6 +68,32 @@ def parse_feed_content(
         category = getattr(source, "category", "news")
         item_type = "tool" if category == "tools" else ("learning" if category == "learning" else ("geek" if category == "geek" else "news"))
 
+        # Extract thumbnail / OG image from RSS entry
+        thumbnail_url = None
+        # Try media:thumbnail or media:content
+        media_thumbnail = entry.get('media_thumbnail', [])
+        if media_thumbnail and isinstance(media_thumbnail, list):
+            thumbnail_url = media_thumbnail[0].get('url')
+        if not thumbnail_url:
+            media_content = entry.get('media_content', [])
+            if media_content and isinstance(media_content, list):
+                for mc in media_content:
+                    if mc.get('medium') == 'image' or mc.get('type', '').startswith('image/'):
+                        thumbnail_url = mc.get('url')
+                        break
+        # Try enclosures
+        if not thumbnail_url:
+            for enc in entry.get('enclosures', []):
+                if enc.get('type', '').startswith('image/'):
+                    thumbnail_url = enc.get('href') or enc.get('url')
+                    break
+        # Try first <img> in raw_content
+        if not thumbnail_url and raw_content:
+            import re as _re
+            img_match = _re.search(r'https?://[^\s"\'>]+\.(?:jpg|jpeg|png|webp|gif)(?:[?][^\s"\'>]*)?', raw_content, _re.IGNORECASE)
+            if img_match:
+                thumbnail_url = img_match.group(0)
+
         item = NewsItem(
             id="",
             source_id=source.id,
@@ -77,6 +103,7 @@ def parse_feed_content(
             collected_date_utc=datetime.datetime.now(datetime.timezone.utc),
             raw_content=raw_content,
             item_type=item_type,
+            thumbnail_url=thumbnail_url,
         )
         items.append(item)
 
