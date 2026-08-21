@@ -7,10 +7,7 @@ import urllib.parse
 from typing import Optional, Dict, Any, List
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://rvoyllttmlluhwenhyln.supabase.co")
-SUPABASE_KEY = os.environ.get(
-    "SUPABASE_KEY",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2b3lsbHR0bWxsdWh3ZW5oeWxuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3OTY0MjAsImV4cCI6MjA5MTM3MjQyMH0.wLXV1lUTIT1VTzvS_tq_X6k3K2uClK_0qjvOKjGEv9Y"
-)
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
 
 
 def _get_headers() -> Dict[str, str]:

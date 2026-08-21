@@ -4,9 +4,7 @@ FROM python:3.11-slim
 WORKDIR /app
 
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    SUPABASE_URL=https://rvoyllttmlluhwenhyln.supabase.co \
-    SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2b3lsbHR0bWxsdWh3ZW5oeWxuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3OTY0MjAsImV4cCI6MjA5MTM3MjQyMH0.wLXV1lUTIT1VTzvS_tq_X6k3K2uClK_0qjvOKjGEv9Y
+    PYTHONDONTWRITEBYTECODE=1
 
 # Install build dependencies and uv
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -22,5 +20,5 @@ RUN uv sync --frozen --no-cache
 
 COPY . .
 
-# Run daily ingestion pipeline by default, or background scheduler
+# Run daily ingestion pipeline by default
 CMD ["uv", "run", "python", "-m", "maclovin", "run"]
