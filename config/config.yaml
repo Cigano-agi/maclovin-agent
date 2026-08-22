@@ -186,6 +186,14 @@ sources:
     active: true
     timeout_seconds: 15
 
+  - id: "hn-newest"
+    name: "Hacker News — Top Stories"
+    ingestion_type: "rss"
+    url: "https://hnrss.org/frontpage"
+    category: "tools"
+    active: true
+    timeout_seconds: 15
+
   - id: "huggingface-models"
     name: "Hugging Face (Modelos & Repositórios de IA)"
     ingestion_type: "rss"
@@ -202,11 +210,51 @@ sources:
     active: true
     timeout_seconds: 15
 
+  - id: "github-trending"
+    name: "GitHub Blog (Releases & Launches)"
+    ingestion_type: "rss"
+    url: "https://github.blog/feed/"
+    category: "tools"
+    active: true
+    timeout_seconds: 15
+
+  - id: "producthunt"
+    name: "Product Hunt (Lançamentos do Dia)"
+    ingestion_type: "rss"
+    url: "https://www.producthunt.com/feed"
+    category: "tools"
+    active: true
+    timeout_seconds: 15
+
   # 2. Oportunidades de Negócio & Enterprise Solutions
   - id: "techcrunch-enterprise"
     name: "TechCrunch Enterprise & B2B Solutions"
     ingestion_type: "rss"
     url: "https://techcrunch.com/category/enterprise/feed/"
+    category: "opportunities"
+    active: true
+    timeout_seconds: 15
+
+  - id: "reddit-entrepreneur"
+    name: "Reddit r/Entrepreneur (Hot Posts)"
+    ingestion_type: "rss"
+    url: "https://www.reddit.com/r/entrepreneur/hot/.rss?limit=25"
+    category: "opportunities"
+    active: true
+    timeout_seconds: 15
+
+  - id: "reddit-saas"
+    name: "Reddit r/SaaS (Hot Posts)"
+    ingestion_type: "rss"
+    url: "https://www.reddit.com/r/SaaS/hot/.rss?limit=25"
+    category: "opportunities"
+    active: true
+    timeout_seconds: 15
+
+  - id: "indiehackers"
+    name: "Indie Hackers (Projetos & Receita)"
+    ingestion_type: "rss"
+    url: "https://www.indiehackers.com/feed.rss"
     category: "opportunities"
     active: true
     timeout_seconds: 15
@@ -228,7 +276,31 @@ sources:
     active: true
     timeout_seconds: 15
 
-  # 4. Notícias & Mercado de IA
+  - id: "techcrunch-fundings"
+    name: "TechCrunch Fundings & Exits"
+    ingestion_type: "rss"
+    url: "https://techcrunch.com/category/fundings-exits/feed/"
+    category: "business"
+    active: true
+    timeout_seconds: 15
+
+  - id: "wired-business"
+    name: "Wired Business"
+    ingestion_type: "rss"
+    url: "https://www.wired.com/feed/category/business/latest/rss"
+    category: "business"
+    active: true
+    timeout_seconds: 15
+
+  - id: "reddit-technology"
+    name: "Reddit r/technology (Hot — Leaks, Polêmicas, Breaking)"
+    ingestion_type: "rss"
+    url: "https://www.reddit.com/r/technology/hot/.rss?limit=30"
+    category: "news"
+    active: true
+    timeout_seconds: 15
+
+  # 4. Notícias & Mercado de IA — incluindo breaking news e leaks
   - id: "techcrunch-ai"
     name: "TechCrunch AI & Big Tech"
     ingestion_type: "rss"
@@ -241,6 +313,87 @@ sources:
     name: "The Verge Tech"
     ingestion_type: "rss"
     url: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml"
+    category: "news"
+    active: true
+    timeout_seconds: 15
+
+  - id: "theverge-tech"
+    name: "The Verge — All Tech News"
+    ingestion_type: "rss"
+    url: "https://www.theverge.com/rss/index.xml"
+    category: "news"
+    active: true
+    timeout_seconds: 15
+
+  - id: "arstechnica"
+    name: "Ars Technica (Breaking Tech & Science)"
+    ingestion_type: "rss"
+    url: "https://feeds.arstechnica.com/arstechnica/index"
+    category: "news"
+    active: true
+    timeout_seconds: 15
+
+  - id: "wired-ai"
+    name: "Wired (AI & Tech)"
+    ingestion_type: "rss"
+    url: "https://www.wired.com/feed/tag/artificial-intelligence/latest/rss"
+    category: "news"
+    active: true
+    timeout_seconds: 15
+
+  - id: "reddit-worldnews"
+    name: "Reddit r/worldnews (Hot — Breaking News)"
+    ingestion_type: "rss"
+    url: "https://www.reddit.com/r/worldnews/hot/.rss?limit=20"
+    category: "news"
+    active: true
+    timeout_seconds: 15
+
+  # 4b. Cybersecurity, Leaks & Underground News
+  - id: "krebs-security"
+    name: "Krebs on Security (Hacks & Leaks)"
+    ingestion_type: "rss"
+    url: "https://krebsonsecurity.com/feed/"
+    category: "news"
+    active: true
+    timeout_seconds: 15
+
+  - id: "schneier-security"
+    name: "Schneier on Security"
+    ingestion_type: "rss"
+    url: "https://www.schneier.com/feed/atom/"
+    category: "news"
+    active: true
+    timeout_seconds: 15
+
+  - id: "bleepingcomputer"
+    name: "BleepingComputer (Malware, Ransomware, Leaks)"
+    ingestion_type: "rss"
+    url: "https://www.bleepingcomputer.com/feed/"
+    category: "news"
+    active: true
+    timeout_seconds: 15
+
+  - id: "darkreading"
+    name: "Dark Reading (Threat Intel & Hacks)"
+    ingestion_type: "rss"
+    url: "https://www.darkreading.com/rss.xml"
+    category: "news"
+    active: true
+    timeout_seconds: 15
+
+  - id: "reddit-netsec"
+    name: "Reddit r/netsec (Segurança & Exploits)"
+    ingestion_type: "rss"
+    url: "https://www.reddit.com/r/netsec/hot/.rss?limit=20"
+    category: "news"
+    active: true
+    timeout_seconds: 15
+
+  - id: "hackernews-ask"
+    name: "Hacker News — Ask HN (Discussões Quentes)"
+    ingestion_type: "rss"
+    url: "https://hnrss.org/ask"
     category: "news"
     active: true
     timeout_seconds: 15
@@ -262,7 +415,31 @@ sources:
     active: true
     timeout_seconds: 15
 
-  # 6. Universo Geek, Games, Cinema & HQs
+  - id: "dev-to-programming"
+    name: "Dev.to (Programação & Tools)"
+    ingestion_type: "rss"
+    url: "https://dev.to/feed/tag/programming"
+    category: "learning"
+    active: true
+    timeout_seconds: 15
+
+  - id: "medium-ai"
+    name: "Towards Data Science / Medium AI"
+    ingestion_type: "rss"
+    url: "https://towardsdatascience.com/feed"
+    category: "learning"
+    active: true
+    timeout_seconds: 15
+
+  - id: "reddit-programming"
+    name: "Reddit r/programming (Hot)"
+    ingestion_type: "rss"
+    url: "https://www.reddit.com/r/programming/hot/.rss?limit=20"
+    category: "learning"
+    active: true
+    timeout_seconds: 15
+
+  # 6. Universo Geek, Games, Cinema & HQs — incluindo leaks e controvérsias
   - id: "ovicio-geek"
     name: "O Vício (HQs, Cinema & Animes)"
     ingestion_type: "rss"
@@ -286,3 +463,52 @@ sources:
     category: "geek"
     active: true
     timeout_seconds: 15
+
+  - id: "kotaku"
+    name: "Kotaku (Games, Leaks & Controvérsias)"
+    ingestion_type: "rss"
+    url: "https://kotaku.com/rss"
+    category: "geek"
+    active: true
+    timeout_seconds: 15
+
+  - id: "ign-global"
+    name: "IGN (Games Global — Leaks & Reviews)"
+    ingestion_type: "rss"
+    url: "https://feeds.feedburner.com/ign/all"
+    category: "geek"
+    active: true
+    timeout_seconds: 15
+
+  - id: "reddit-gaming"
+    name: "Reddit r/gaming (Hot — Virais & Leaks)"
+    ingestion_type: "rss"
+    url: "https://www.reddit.com/r/gaming/hot/.rss?limit=25"
+    category: "geek"
+    active: true
+    timeout_seconds: 15
+
+  - id: "reddit-movies"
+    name: "Reddit r/movies (Hot — Trailers & Breaking)"
+    ingestion_type: "rss"
+    url: "https://www.reddit.com/r/movies/hot/.rss?limit=20"
+    category: "geek"
+    active: true
+    timeout_seconds: 15
+
+  - id: "polygon"
+    name: "Polygon (Games & Pop Culture)"
+    ingestion_type: "rss"
+    url: "https://www.polygon.com/rss/index.xml"
+    category: "geek"
+    active: true
+    timeout_seconds: 15
+
+  - id: "resetera-news"
+    name: "Eurogamer (Games & Leaks)"
+    ingestion_type: "rss"
+    url: "https://www.eurogamer.net/?format=rss"
+    category: "geek"
+    active: true
+    timeout_seconds: 15
+
